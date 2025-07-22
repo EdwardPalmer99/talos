@@ -1,6 +1,7 @@
-settings.json
-bazel-bin/*
-bazel-testlogs/*
-bazel-out/*
-bazel-feedhandler/*
-.vscode
+*.DS_Store
+*.xcodeproj
+build/
+install/
+*.o
+/.vscode/
+bazel-*
