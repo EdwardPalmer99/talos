@@ -1,5 +1,5 @@
 cc_binary(
     name = "feedhandler",
-    srcs = glob(["**/*.cpp"]),
+    srcs = glob(["**/*.cpp", "**/*.hpp"]),
     visibility = ["//visibility:public"]
 )
