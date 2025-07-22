@@ -1,0 +1,6 @@
+settings.json
+bazel-bin/*
+bazel-testlogs/*
+bazel-out/*
+bazel-feedhandler/*
+.vscode
