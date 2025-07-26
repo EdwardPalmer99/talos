@@ -4,4 +4,4 @@ build/
 install/
 *.o
 /.vscode/
-bazel-*
+/bazel-*
