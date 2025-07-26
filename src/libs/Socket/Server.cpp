@@ -8,6 +8,7 @@
  */
 
 #include "Server.hpp"
+#include <cstring>
 #include <iostream>
 #include <stdexcept>
 #include <unistd.h>
@@ -18,6 +19,9 @@ namespace Socket
 
 Server::Server(uint16_t serverPort)
 {
+    /* Create server socket */
+    _serverSocket = socket(AF_INET, SOCK_STREAM, 0);
+
     /* Server address */
     _serverAddress.sin_family = AF_INET;         /* IPV4 */
     _serverAddress.sin_port = htons(serverPort); /* Port */
@@ -58,6 +62,7 @@ void Server::poll()
 
     while (true) /* TODO: - Insanely inefficient and bad */
     {
+        memset(buffer, 0, sizeof(char) * 1024);
         if ((recv(_clientSocket, buffer, sizeof(buffer), 0)) == (-1))
         {
             /* No message */
