@@ -7,50 +7,28 @@
  *
  */
 
-#include "MarketDataClient.hpp"
-#include "MarketDataEvent.hpp"
-#include "MarketDataFeed.hpp"
 #include "MarketDataFeedHandler.hpp"
+#include "MarketDataSimulator.hpp"
+#include "TradingEngine.hpp"
 #include <iostream>
 
 int main(int argc, char **argv)
 {
     /* EXTERNAL TO OUR TRADING INFRASTRUCTURE */
-    MarketDataFeed feed1;
-
-    /* Subscribe the feed handler to each feed. TODO: - enable all MD symbols */
-    feed1.subscribe(&MarketDataFeedHandler::instance(), "MarketData", "ABC");
+    /* TODO: - do not use absolute path as will break elsewhere */
+    MarketDataSimulator simulator("0P0000WUU0.L", "GBP", "/home/ubuntu/feedhandler/data/SampleMarketData.csv"); /* Publishes updates to internal feed handler */
 
     /* INTERNAL */
+    TradingEngine engine1(3000.00, "0P0000WUU0.L"); /* Trading engine receives updates from our internal feed-handler */
 
-    /* Subscribe trading engines to the feed handler for interested symbols */
-    MarketDataClient tradingEngine1;
-    MarketDataFeedHandler::instance().subscribe(&tradingEngine1, "MarketData", "ABC");
+    MarketDataFeedHandler::instance().start(); /* Listen for updates */
+    engine1.start();
+    simulator.start(); /* Start generating synthetic data */
 
-    MarketDataClient tradingEngine2;
-    MarketDataFeedHandler::instance().subscribe(&tradingEngine2, "MarketData", "ABC");
-
-    /* Fire-up. We'll leave the feeds on the main-thread for now */
-    tradingEngine1.start();
-    tradingEngine2.start();
-    MarketDataFeedHandler::instance().start();
-
-    /* On main-thread we publish market data for a trade */
-    // feed1.publishEvent(theEvent);
-
-    /* Expect the feed handler to receive this and publish to the clients */
-    while (true)
-    {
-        std::string isin;
-        std::getline(std::cin, isin);
-
-        MarketDataEvent theEvent(isin);
-        feed1.publishEvent(theEvent);
-    }
-
-    tradingEngine1.thread().join();
-    tradingEngine2.thread().join();
+    /***********************/
     MarketDataFeedHandler::instance().thread().join();
+    engine1.thread().join();
+    simulator.thread().join();
 
     return 0;
 }

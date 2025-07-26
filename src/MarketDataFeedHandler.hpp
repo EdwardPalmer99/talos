@@ -11,12 +11,11 @@
 #include "EventHandler.hpp"
 #include "EventPublisher.hpp"
 #include "EventSubscriber.hpp"
-#include "MarketDataClient.hpp"
+#include "TradingEngine.hpp"
 #include <mutex>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
-
 
 class Event;
 

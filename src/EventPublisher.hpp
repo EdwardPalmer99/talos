@@ -25,32 +25,20 @@ public:
 
     virtual ~EventPublisher() = default;
 
-    // TODO: - use 'id = *' to subscribe to all events of that type
-    /* Subscribes to a particular event type */
-    void subscribe(EventSubscriber *subscriber, std::string type, std::string id);
+    /* Subscribes to a particular symbol */
+    void subscribe(EventSubscriber *subscriber, std::string symbol);
 
-    /* Unsubscribes from a particular event type */
-    void unsubscribe(EventSubscriber *subscriber, std::string type, std::string id);
+    /* Unsubscribes from a particular symbol */
+    void unsubscribe(EventSubscriber *subscriber, std::string symbol);
 
 protected:
     /* Publish an event to all subscribers */
     void publishEvent(const Event &event);
 
 private:
-    using EventPair = std::pair<std::string, std::string>; /* (type, id) */
-
-    struct EventPairHash
-    {
-        std::size_t operator()(const EventPair &pair) const
-        {
-            auto h1 = std::hash<std::string>{}(pair.first);
-            auto h2 = std::hash<std::string>{}(pair.second);
-
-            return (h1 ^ h2);
-        }
-    };
-
-    std::unordered_map<EventPair, std::unordered_set<EventSubscriber *>, EventPairHash> _notifySubscribersForEvent;
+    // TODO: - slightly pointless using a map since we only deal with a single symbol
+    /* Maps from symbol --> subscribers */
+    std::unordered_map<std::string, std::unordered_set<EventSubscriber *>> _notifySubscribersForEvent;
 
     mutable std::mutex _eventPublisherMutex;
     using LockGuard = std::lock_guard<std::mutex>;
