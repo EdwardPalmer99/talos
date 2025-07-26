@@ -8,9 +8,9 @@
  */
 
 #pragma once
-#include "EventHandler.hpp"
-#include "EventPublisher.hpp"
-#include "EventSubscriber.hpp"
+#include "Events/EventHandler.hpp"
+#include "Events/EventPublisher.hpp"
+#include "Events/EventSubscriber.hpp"
 #include "TradingEngine.hpp"
 #include <mutex>
 #include <string>

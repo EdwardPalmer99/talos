@@ -8,8 +8,8 @@
  */
 
 #include "TradingEngine.hpp"
-#include "Event.hpp"
-#include "EventLogger.hpp"
+#include "Events/Event.hpp"
+#include "Events/EventLogger.hpp"
 #include "MarketDataFeedHandler.hpp"
 #include <iostream>
 #include <sstream>
