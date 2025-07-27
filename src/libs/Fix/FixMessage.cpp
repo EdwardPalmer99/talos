@@ -13,39 +13,90 @@
 #include <iostream>
 #include <sstream>
 
-namespace Fix
-{
 
-Message::Message(Value messageType) : _messageType(messageType)
+FixMessage::FixMessage(const std::string &message)
 {
+    _message = message; /* Already constructed */
+
+    std::size_t iCurr = 0;
+    std::size_t iNext = 0;
+    while ((iNext = message.find(";", iCurr)) != std::string::npos)
+    {
+        auto substring = message.substr(iCurr, iNext - iCurr);
+
+        TagValue tagValue = extractTagValuePair(substring);
+        setTag(tagValue.first, tagValue.second);
+
+        iCurr = iNext + 1;
+    }
 }
 
 
-// Message::Message(const std::string &message)
-// {
-//     /* TODO: - add error checking here and validation steps */
-//     int index;
-//     int offset = 0;
-
-//     while ((index = message.find(';', offset)) != std::string::npos)
-//     {
-//         std::string tagValue = message.substr(offset, index);
-
-//         /* TODO: - add a splitter here to separate the two and add to map */
+bool FixMessage::hasTag(Tag tag) const
+{
+    return (_valueForTag.find(tag) != _valueForTag.end());
+}
 
 
-//         offset += (index + 1);
-//     }
-// }
+void FixMessage::setTag(Tag tag, Value value)
+{
+    switch (tag)
+    {
+        case 8: /* Ignore special header tags */
+        case 9:
+        case 10:
+            break;
+        default:
+            _valueForTag[tag] = std::move(value);
+            _message.clear(); /* Needs to be recomputed */
+            break;
+    }
+}
 
 
-std::string Message::tagPair(int tag, Value value) const
+void FixMessage::eraseTag(Tag tag)
+{
+    auto iter = _valueForTag.find(tag);
+    if (iter == _valueForTag.end())
+    {
+        return;
+    }
+
+    _valueForTag.erase(iter);
+    _message.clear(); /* Needs to be recomputed */
+}
+
+
+FixMessage::Value FixMessage::getValue(Tag tag) const
+{
+    auto iter = _valueForTag.find(tag);
+    return (iter != _valueForTag.end() ? iter->second : "");
+}
+
+
+FixMessage::TagValue FixMessage::extractTagValuePair(const std::string &tagValue) const
+{
+    std::size_t iSeparator = tagValue.find("=");
+
+    if (iSeparator == std::string::npos)
+    {
+        throw std::runtime_error("missing expected separator '='");
+    }
+
+    std::string tag = tagValue.substr(0, iSeparator);
+    std::string value = tagValue.substr(iSeparator + 1);
+
+    return TagValue(std::stoi(tag), value);
+}
+
+
+std::string FixMessage::constructTagValuePair(Tag tag, Value value) const
 {
     return (std::to_string(tag) + "=" + std::move(value) + ";");
 }
 
 
-const std::string &Message::toString() const
+const std::string &FixMessage::toString() const
 {
     if (!_message.empty())
     {
@@ -54,15 +105,14 @@ const std::string &Message::toString() const
 
     /* Body */
     std::string messageBody;
-    messageBody += tagPair(35, _messageType);
     for (auto &[tag, value] : _valueForTag)
     {
-        messageBody += tagPair(static_cast<int>(tag), value);
+        messageBody += constructTagValuePair(tag, value);
     }
 
     /* Header */
-    _message += tagPair(8, "FIX.4.4");
-    _message += tagPair(9, std::to_string(messageBody.size()));
+    _message += constructTagValuePair(8, "FIX.4.4");
+    _message += constructTagValuePair(9, std::to_string(messageBody.size()));
     _message += messageBody;
 
     /* CheckSum: sum of all ASII characters except 10=xxx; tag */
@@ -76,9 +126,7 @@ const std::string &Message::toString() const
     std::stringstream checksumStream;
     checksumStream << std::setw(3) << std::setfill('0') << std::to_string(count % 256);
 
-    _message += tagPair(10, checksumStream.str());
+    _message += constructTagValuePair(10, checksumStream.str());
 
     return _message;
 }
-
-} // namespace Fix

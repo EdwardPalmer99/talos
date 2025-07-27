@@ -10,10 +10,7 @@
 #pragma once
 
 
-namespace Fix
-{
-
-enum class Tag : int
+enum FixTag
 {
     ClOrdID = 11,
     Currency = 15,
@@ -28,6 +25,3 @@ enum class Tag : int
     Side = 54,
     TransactTime = 60,
 };
-
-
-} // namespace Fix

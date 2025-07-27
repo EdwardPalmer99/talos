@@ -13,9 +13,6 @@
 #include <unistd.h>
 
 
-namespace Socket
-{
-
 Client::Client(uint16_t serverPort)
 {
     /* Server address */
@@ -85,5 +82,3 @@ bool Client::doSend(std::string message)
 
     return true;
 }
-
-} // namespace Socket

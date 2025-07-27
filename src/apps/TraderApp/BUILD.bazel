@@ -1,8 +1,9 @@
 cc_binary(
-    name="oms-app",
-    srcs=["OMSApp.cpp"],
+    name="trader_app",
+    srcs=glob(["*.cpp"]),
     deps=[
         "//src/libs:order_management_system_lib"
     ],
+    includes=["."],
     visibility=["//visibility:public"]
 )

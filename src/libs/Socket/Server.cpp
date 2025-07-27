@@ -14,9 +14,6 @@
 #include <unistd.h>
 
 
-namespace Socket
-{
-
 Server::Server(uint16_t serverPort)
 {
     /* Create server socket */
@@ -56,7 +53,7 @@ bool Server::doDisconnect()
     return true;
 }
 
-void Server::poll()
+void Server::start()
 {
     char buffer[1024];
 
@@ -72,11 +69,3 @@ void Server::poll()
         sleep(2);
     }
 }
-
-void Server::handleClientMessage(std::string message)
-{
-    std::cout << "Received message: " << message << std::endl;
-}
-
-
-} // namespace Socket

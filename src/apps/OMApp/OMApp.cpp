@@ -1,5 +1,5 @@
 /**
- * @file main.cpp
+ * @file OMEngine.cpp
  * @author Edward Palmer
  * @date 2025-07-27
  *
@@ -7,18 +7,18 @@
  *
  */
 
-#include "Socket/Server.hpp"
+#include "OMEngine.hpp"
 #include <string>
 
 /**
- * Main entry-point for the OrderManagementSystem
+ * Main entry-point for the Order Management System (OMS)
  */
 int main(void)
 {
     /* Basic version just to test we can receive messages from client */
-    Socket::Server theServer(8080);
+    OMEngine engineServer(8080);
 
-    theServer.poll();
+    engineServer.start();
 
     return 0;
 }

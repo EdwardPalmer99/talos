@@ -1,8 +1,9 @@
 cc_binary(
-    name="client-app",
-    srcs=["ClientApp.cpp"],
+    name="order_management_app",
+    srcs=glob(["*.cpp", "*.hpp"]),
     deps=[
         "//src/libs:order_management_system_lib"
     ],
+    includes=["."],
     visibility=["//visibility:public"]
 )

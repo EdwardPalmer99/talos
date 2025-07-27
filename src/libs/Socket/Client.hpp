@@ -14,9 +14,6 @@
 
 // TODO: - setup to run on a background thread
 
-namespace Socket
-{
-
 /* TODO: - create FixClient subclass for sending Fix messages */
 class Client
 {
@@ -43,5 +40,3 @@ private:
     int _clientSocket{-1};      /* Socket of client (-1 on error) */
     sockaddr_in _serverAddress; /* Address we send packets to */
 };
-
-} // namespace Socket

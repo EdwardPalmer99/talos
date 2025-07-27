@@ -12,57 +12,41 @@
 #include <string>
 #include <unordered_map>
 
-namespace Fix
-{
 
-class Message
+class FixMessage
 {
 public:
+    using Tag = int;
     using Value = std::string;
+    using TagValue = std::pair<Tag, Value>;
 
-    Message() = delete;
-    Message(Value messageType = "8");
+    FixMessage() = default;
 
     /* Construct from a raw-FIX string */
-    // Message(std::string message);
+    FixMessage(const std::string &message);
 
-    [[nodiscard]] inline bool hasPair(Tag tag) const;
+    /* Update value for a specific tag */
+    void setTag(Tag tag, Value value);
 
-    void inline setPair(Tag tag, Value value);
+    /* Remove a tag from a FIX message */
+    void eraseTag(Tag tag);
 
-    [[nodiscard]] Value inline getValue(Tag tag) const;
+    /* Returns true if tag is present in FIX message */
+    [[nodiscard]] bool hasTag(Tag tag) const;
 
+    /* Returns the value for a tag or an empty string if not present */
+    [[nodiscard]] Value getValue(Tag tag) const;
+
+    /* Converts to a std::string */
     [[nodiscard]] const std::string &toString() const;
 
 protected:
-    std::string tagPair(int tag, Value value) const;
+    std::string constructTagValuePair(Tag tag, Value value) const;
+
+    TagValue extractTagValuePair(const std::string &tagValue) const;
 
 private:
     /* Stores constructed message */
     mutable std::string _message;
-
-    Value _messageType; /* tag 35 */
     std::unordered_map<Tag, Value> _valueForTag;
 };
-
-
-bool Message::hasPair(Tag tag) const
-{
-    return (_valueForTag.find(tag) != _valueForTag.end());
-}
-
-
-void Message::setPair(Tag tag, Value value)
-{
-    _valueForTag[tag] = std::move(value);
-    _message.clear(); /* Needs to be recomputed */
-}
-
-
-Message::Value Message::getValue(Tag tag) const
-{
-    auto iter = _valueForTag.find(tag);
-    return (iter != _valueForTag.end() ? iter->second : "");
-}
-
-} // namespace Fix
