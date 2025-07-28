@@ -24,7 +24,6 @@ void EventHandler::start()
 
 void EventHandler::notify()
 {
-    //EventLogger::instance().log("Notified about new data");
     _conditionVariable.notify_one();
 }
 
