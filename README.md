@@ -1,4 +1,4 @@
-FeedHandler
+Talos
 ===========
 
-A demo project simulating a FeedHandler.
+A demo implementation of an Order Management System in C++.
