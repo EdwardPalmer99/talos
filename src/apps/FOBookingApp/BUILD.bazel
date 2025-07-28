@@ -1,5 +1,5 @@
 cc_binary(
-    name="trader_app",
+    name="front_office_booking_app",
     srcs=glob(["*.cpp"]),
     deps=[
         "//src/libs:order_management_system_lib"

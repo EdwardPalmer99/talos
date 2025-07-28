@@ -15,8 +15,13 @@
  */
 int main(void)
 {
+    // TODO: - need someway to handle connections down or not found
+    // These should get put into a message queue and wait until up
+    // Also write to disk to handle restarts
+
+
     /* Basic version just to test we can receive messages from client */
-    OMEngine engineServer(8080);
+    OMEngine engineServer(8080, 8081);
 
     engineServer.start();
 

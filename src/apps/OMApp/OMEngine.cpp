@@ -20,7 +20,7 @@
 
 void OMEngine::handleFixMessage(FixMessage message)
 {
-    std::string msgType = message.getValue(35);
+    std::string msgType = message.getValue(FixTag::MsgType);
 
     if (msgType == "8")
         return handleClientFixMessage(std::move(message));
@@ -29,6 +29,7 @@ void OMEngine::handleFixMessage(FixMessage message)
     else if (msgType == "AE")
         return handleExchangeFill(std::move(message));
 
+    /* TODO: - handle; send alert to OMAlert to notify humans */
     throw std::runtime_error("received invalid msgType [" + msgType + "]");
 }
 
@@ -40,16 +41,24 @@ void OMEngine::handleClientFixMessage(FixMessage message)
 
     /* TODO: - use a logger here */
     std::cout << "OMEngine received ClientFix: [" << message.toString() << "]" << std::endl;
+    message.setTag(FixTag::Trace, message.getValue(FixTag::Trace) + "/OMEngine");
+    doSend(message); /* Send down to the exchange */
+
+    // TODO: - should be possible to have smart client to send messages to multiple destinations
 }
 
 
 void OMEngine::handleExchangeAck(FixMessage message)
 {
     std::cout << "OMEngine received ExchangeAck: [" << message.toString() << "]" << std::endl;
+
+    /* TODO: - send a 35=UETR message to DB with key info */
 }
 
 
 void OMEngine::handleExchangeFill(FixMessage message)
 {
     std::cout << "OMEngine received ExchangeFill: [" << message.toString() << "]" << std::endl;
+
+    /* TODO: - send a 35=UETR message to DB with key info */
 }

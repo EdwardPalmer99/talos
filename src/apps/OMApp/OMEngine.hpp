@@ -9,8 +9,10 @@
 
 #pragma once
 #include "Fix/FixMessage.hpp"
+#include "Socket/FixClient.hpp"
 #include "Socket/FixServer.hpp"
 
+// TODO: - be smarter with a Queue when we receive messages
 /**
  * Order Management System Engine
  *
@@ -25,10 +27,11 @@
  *                      |
  *                   Exchange
  */
-class OMEngine : public FixServer
+class OMEngine : public FixServer, public FixClient
 {
 public:
-    OMEngine(uint16_t serverPort) : FixServer(serverPort) {}
+    OMEngine(uint16_t enginePort, uint16_t exchangePort)
+        : FixServer(enginePort), FixClient(exchangePort) {}
 
 protected:
     /* 35=8 */

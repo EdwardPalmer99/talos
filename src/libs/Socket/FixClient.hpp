@@ -11,6 +11,8 @@
 #include "Client.hpp"
 #include "Fix/FixMessage.hpp"
 #include "Fix/FixTag.hpp"
+#include <string>
+
 
 class FixClient : protected Client
 {
@@ -18,5 +20,8 @@ public:
     FixClient() = delete;
     FixClient(uint16_t serverPort);
 
-    bool doSend(const FixMessage &message);
+    bool doSend(FixMessage &message);
+
+protected:
+    std::string sendingTimeUTC() const;
 };

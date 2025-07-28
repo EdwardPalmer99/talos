@@ -32,7 +32,7 @@ Server::Server(uint16_t serverPort)
 
     listen(_serverSocket, 5); /* Socket, N requests to queue before refusal */
     _clientSocket = accept(_serverSocket, nullptr, nullptr);
-}
+} /* TODO: - this won't work for two-way communication */
 
 
 Server::~Server()
