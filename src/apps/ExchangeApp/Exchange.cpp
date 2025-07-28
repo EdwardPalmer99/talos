@@ -28,9 +28,7 @@ void Exchange::handleFixMessage(FixMessage message)
     ackMessage.setTag(FixTag::MsgType, "AR");
     ackMessage.setTag(FixTag::ExecType, "0");
 
-    FixClient sendToOMS(8080);
-    sendToOMS.doSend(ackMessage);
-
+    broadcast(ackMessage); /* TODO: - these should be queued up on a separate thread */
     sleep(0.5);
 
     /* Exchange send back a Fill */
@@ -38,7 +36,7 @@ void Exchange::handleFixMessage(FixMessage message)
     fillMessage.setTag(FixTag::MsgType, "AE");
     fillMessage.setTag(FixTag::ExecType, "2"); /* Fill */
 
-    sendToOMS.doSend(ackMessage);
+    broadcast(fillMessage);
 
     /* TODO: - operate on separate thread */
     /* TODO: - have exchange's own DB here */

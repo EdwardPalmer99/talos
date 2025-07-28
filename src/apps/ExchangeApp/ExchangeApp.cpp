@@ -8,10 +8,14 @@
  */
 
 #include "Exchange.hpp"
+#include "Socket/ConnectionPorts.hpp"
+
 
 int main(void)
 {
-    Exchange exchange(8081, 8080); /* TODO: - put these connections somewhere */
-    exchange.start();
+    Exchange exchange{ConnectionPorts::ExchangePort};
+    // exchange.connectToServer(ConnectionPorts::OMEnginePort);
+    exchange.wait();
+
     return 0;
 }

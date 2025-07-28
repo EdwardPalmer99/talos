@@ -27,11 +27,10 @@
  *                      |
  *                   Exchange
  */
-class OMEngine : public FixServer, public FixClient
+class OMEngine : public FixServer //, public FixClient
 {
 public:
-    OMEngine(uint16_t enginePort, uint16_t exchangePort)
-        : FixServer(enginePort), FixClient(exchangePort) {}
+    OMEngine(uint16_t enginePort) : FixServer(enginePort) {}
 
 protected:
     /* 35=8 */

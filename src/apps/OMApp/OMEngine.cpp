@@ -8,6 +8,7 @@
  */
 
 #include "OMEngine.hpp"
+#include "Events/EventLogger.hpp"
 #include <functional>
 #include <iostream>
 #include <stdexcept>
@@ -40,9 +41,9 @@ void OMEngine::handleClientFixMessage(FixMessage message)
     /* TODO: - stamp some additional tags on such as senderID and send to exchange */
 
     /* TODO: - use a logger here */
-    std::cout << "OMEngine received ClientFix: [" << message.toString() << "]" << std::endl;
+    Logger::instance().log("OMEngine received ClientFix: [" + message.toString() + "]");
     message.setTag(FixTag::Trace, message.getValue(FixTag::Trace) + "/OMEngine");
-    doSend(message); /* Send down to the exchange */
+    // broadcast(message); /* Send down to the exchange */
 
     // TODO: - should be possible to have smart client to send messages to multiple destinations
 }
@@ -50,7 +51,7 @@ void OMEngine::handleClientFixMessage(FixMessage message)
 
 void OMEngine::handleExchangeAck(FixMessage message)
 {
-    std::cout << "OMEngine received ExchangeAck: [" << message.toString() << "]" << std::endl;
+    Logger::instance().log("OMEngine received ExchangeAck: [" + message.toString() + "]");
 
     /* TODO: - send a 35=UETR message to DB with key info */
 }
@@ -58,7 +59,7 @@ void OMEngine::handleExchangeAck(FixMessage message)
 
 void OMEngine::handleExchangeFill(FixMessage message)
 {
-    std::cout << "OMEngine received ExchangeFill: [" << message.toString() << "]" << std::endl;
+    Logger::instance().log("OMEngine received ExchangeFill: [" + message.toString() + "]");
 
     /* TODO: - send a 35=UETR message to DB with key info */
 }

@@ -58,5 +58,5 @@ void TradingEngine::logEvent(const Event &event) const
     double pnl = _funds + _units * event.closePrice - _originalFunds;
 
     output << "[" << "funds: " << _funds << "; shares: " << _units << "; total: " << _funds + _units * event.closePrice << "; PnL: " << pnl << "]";
-    EventLogger::instance().log(output.str());
+    Logger::instance().log(output.str());
 }

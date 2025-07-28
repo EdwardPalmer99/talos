@@ -12,31 +12,24 @@
 #include <string>
 #include <sys/socket.h>
 
-// TODO: - setup to run on a background thread
-
-/* TODO: - create FixClient subclass for sending Fix messages */
 class Client
 {
 public:
-    Client() = delete;
+    Client();
     Client(const Client &) = delete;
     Client &operator=(const Client &) = delete;
 
-    explicit Client(uint16_t serverPort);
-
     virtual ~Client();
 
-    /* Assumes that already have an active connection setup */
-    bool doSend(std::string message);
+    /* Create a new connection to a server */
+    bool connectToServer(int serverPort);
 
-protected:
-    /* Start a connection to the server. Returns true on success */
-    bool doConnect();
+    /* Broadcast a message to all connections */
+    bool broadcast(std::string message);
 
-    /* Called in destructor */
-    bool doDisconnect();
+    /* Accessor for client's socket */
+    [[nodiscard]] inline int clientSocket() const { return _clientSocket; }
 
 private:
-    int _clientSocket{-1};      /* Socket of client (-1 on error) */
-    sockaddr_in _serverAddress; /* Address we send packets to */
+    int _clientSocket{-1}; /* Socket of client (-1 on error) */
 };

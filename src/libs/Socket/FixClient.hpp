@@ -14,13 +14,12 @@
 #include <string>
 
 
-class FixClient : protected Client
+class FixClient : public Client
 {
 public:
-    FixClient() = delete;
-    FixClient(uint16_t serverPort);
+    FixClient() = default;
 
-    bool doSend(FixMessage &message);
+    bool broadcast(FixMessage &message);
 
 protected:
     std::string sendingTimeUTC() const;

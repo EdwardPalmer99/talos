@@ -7,13 +7,14 @@
  *
  */
 
+#include "Events/EventLogger.hpp"
 #include "Fix/FixTag.hpp"
+#include "Socket/ConnectionPorts.hpp"
 #include "Socket/FixClient.hpp"
 #include "Utilities/UUID.hpp"
 #include <iostream>
 #include <string>
 #include <unistd.h>
-
 
 /**
  * Front-office application for traders to book, amend, cancel trades
@@ -23,10 +24,17 @@
  */
 int main(void)
 {
+    Logger::instance().log("Starting FOBooking application...");
+
     /* Unique trader ID we assign to this application */
     const std::string kTraderID{UUID::instance().generate(5)};
 
-    FixClient client(8080);
+    Logger::instance().log("connecting to server...");
+
+    FixClient client;
+    client.connectToServer(ConnectionPorts::OMEnginePort);
+
+    Logger::instance().log("connected to server...");
 
     /* Construct dummy Fix */
     FixMessage fix;
@@ -45,9 +53,7 @@ int main(void)
     {
         fix.setTag(FixTag::ClOrdID, UUID::instance().generate(15));
 
-        /* TODO: - use a logger here on a separate thread */
-        std::cout << "TraderApp sending Fix: [" << fix.toString() << "]" << std::endl;
-        client.doSend(fix);
+        client.broadcast(fix);
         sleep(1);
     }
 

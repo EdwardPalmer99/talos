@@ -16,8 +16,7 @@
 class Exchange : public FixServer, public FixClient
 {
 public:
-    Exchange(uint16_t exchangePort, uint16_t omPort)
-        : FixServer(exchangePort), FixClient(omPort) {}
+    Exchange(uint16_t exchangePort) : FixServer(exchangePort) {}
 
 protected:
     /* 35=8 */
