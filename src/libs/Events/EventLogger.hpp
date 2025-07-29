@@ -28,12 +28,18 @@ public:
 
     static Logger &instance();
 
+    /* Thread-safe logging */
     void log(std::string message, Level level = Info);
+
+    /* Thread-safe call to shutdown the logger loop. To be called by applications in their destructors */
+    void shutdown();
 
 protected:
     Logger();
     Logger(const Logger &) = delete;
     Logger &operator=(const Logger &) = delete;
+
+    ~Logger();
 
     void loop();
 
@@ -42,11 +48,11 @@ protected:
     std::string nowUTC() const;
 
 private:
-    using LockGuard = std::lock_guard<std::mutex>;
-
     mutable std::mutex _loggerMutex;
     std::thread _loggerThread; /* Logger thread for writing messages to log */
     std::condition_variable _conditionVariable;
 
     std::queue<std::string> _loggerQueue; /* Log messages to write to out */
+
+    bool _running{false};
 };

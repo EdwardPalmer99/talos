@@ -22,7 +22,14 @@ Logger &Logger::instance()
 
 Logger::Logger()
 {
+    _running = true;
     _loggerThread = std::thread(&Logger::loop, this);
+}
+
+
+Logger::~Logger()
+{
+    shutdown();
 }
 
 
@@ -64,7 +71,7 @@ void Logger::log(std::string message, Level level)
 {
     /* Construct our output message */
     std::ostringstream os;
-    os << nowUTC() << "\t" << levelToString(level) << ": " << std::move(message);
+    os << nowUTC() << " " << levelToString(level) << ": " << std::move(message);
 
     {
         std::unique_lock lock(_loggerMutex);
@@ -82,10 +89,38 @@ void Logger::loop()
         std::unique_lock lock(_loggerMutex);
         _conditionVariable.wait(lock, [this]()
         {
-            return !_loggerQueue.empty();
+            return (!_loggerQueue.empty() || !_running);
         });
 
-        std::cout << _loggerQueue.front() << std::endl;
+        if (!_running) /* Terminate */
+        {
+            return;
+        }
+
+        std::cout << _loggerQueue.front() << std::endl
+                  << std::flush;
+
         _loggerQueue.pop();
+    }
+}
+
+
+void Logger::shutdown()
+{
+    if (!_running)
+    {
+        return; /* Already shutdown */
+    }
+
+    {
+        std::unique_lock lock(_loggerMutex);
+        _running = false;
+    } /* End of lock scope */
+
+    _conditionVariable.notify_one();
+
+    if (_loggerThread.joinable())
+    {
+        _loggerThread.join(); /* Prevent continuing until loop() terminates */
     }
 }
