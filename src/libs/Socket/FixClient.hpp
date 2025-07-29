@@ -11,6 +11,7 @@
 #include "Client.hpp"
 #include "Fix/FixMessage.hpp"
 #include "Fix/FixTag.hpp"
+#include <atomic>
 #include <string>
 
 
@@ -19,8 +20,12 @@ class FixClient : public Client
 public:
     FixClient() = default;
 
+    /* Thread-safe broadcast to all servers */
     bool broadcast(FixMessage &message);
 
 protected:
     std::string sendingTimeUTC() const;
+
+private:
+    std::atomic<long> _msgSeqNo{1};
 };

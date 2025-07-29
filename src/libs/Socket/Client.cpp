@@ -9,6 +9,7 @@
 
 #include "Client.hpp"
 #include "Events/EventLogger.hpp"
+#include <arpa/inet.h>
 #include <iostream>
 #include <stdexcept>
 #include <unistd.h>
@@ -28,7 +29,7 @@ Client::~Client()
 {
     if (close(_clientSocket) == (-1))
     {
-        Logger::instance().log("failed to close client socket", Logger::Error);
+        Logger::instance().log("failed to close socket " + std::to_string(_clientSocket), Logger::Error);
     }
 }
 
@@ -38,8 +39,9 @@ bool Client::connectToServer(int serverPort)
     /* Address of server we would like to connect to */
     sockaddr_in serverAddress;
 
-    serverAddress.sin_family = AF_INET;         /* IPV4 */
-    serverAddress.sin_port = htons(serverPort); /* Port */
+    serverAddress.sin_family = AF_INET;                     /* IPV4 */
+    serverAddress.sin_port = htons(serverPort);             /* Port */
+    serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1"); /* Connect to localhost */
 
     if (connect(_clientSocket, (const struct sockaddr *)&serverAddress, sizeof(serverAddress)) == (-1))
     {
@@ -56,12 +58,14 @@ bool Client::connectToServer(int serverPort)
 
 bool Client::broadcast(std::string message)
 {
+    std::unique_lock lock(_mutex);
+
     if (send(_clientSocket, message.c_str(), message.size(), 0) == (-1))
     {
-        Logger::instance().log("failed to send message: " + message, Logger::Error);
+        Logger::instance().log("failed to broadcast message", Logger::Error);
         return false;
     }
 
-    Logger::instance().log("sent message: " + message, Logger::Info);
+    Logger::instance().log("sent message: " + message);
     return true;
 }

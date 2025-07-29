@@ -17,7 +17,6 @@
 #include <thread>
 #include <unistd.h>
 
-
 Server::Server(Port port) : _port(port)
 {
     /* Create server socket */
@@ -141,7 +140,7 @@ void Server::connectionLoop(SocketFD clientSocket)
         }
         else if (nBytesRead == (-1))
         {
-            Logger::instance().log("can error occurred in recv() from client socket " + std::to_string(clientSocket));
+            Logger::instance().log("an error occurred in recv() from client socket " + std::to_string(clientSocket));
             /* Continue for now */
         }
         else
@@ -161,7 +160,7 @@ void Server::connectionLoop(SocketFD clientSocket)
 
 void Server::receivedMessageQueueLoop()
 {
-    Logger::instance().log("Starting received message queue loop...");
+    Logger::instance().log("starting received message queue loop...");
 
     while (true)
     {

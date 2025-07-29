@@ -8,9 +8,12 @@
  */
 
 #pragma once
+#include <mutex>
 #include <netinet/in.h>
 #include <string>
 #include <sys/socket.h>
+
+/* TODO: - have a thread and an outgoing message queue */
 
 class Client
 {
@@ -24,7 +27,7 @@ public:
     /* Create a new connection to a server */
     bool connectToServer(int serverPort);
 
-    /* Broadcast a message to all connections */
+    /* Thread-safe broadcast a message to all connections */
     bool broadcast(std::string message);
 
     /* Accessor for client's socket */
@@ -32,4 +35,5 @@ public:
 
 private:
     int _clientSocket{-1}; /* Socket of client (-1 on error) */
+    std::mutex _mutex;     /* Ensures broadcast() threadsafe to avoid corruptions */
 };

@@ -40,18 +40,26 @@ void OMEngine::handleClientFixMessage(FixMessage message)
     /* TODO: - Send a message to our DB */
     /* TODO: - stamp some additional tags on such as senderID and send to exchange */
 
-    /* TODO: - use a logger here */
     Logger::instance().log("OMEngine received ClientFix: [" + message.toString() + "]");
-    message.setTag(FixTag::Trace, message.getValue(FixTag::Trace) + "/OMEngine");
-    // broadcast(message); /* Send down to the exchange */
 
-    // TODO: - should be possible to have smart client to send messages to multiple destinations
+    message.setTag(FixTag::Trace, message.getValue(FixTag::Trace) + "/OMEngine");
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    if (!broadcast(message)) /* Route down to exchange */
+    {
+        Logger::instance().log("failed to send message to exchange for ClOrdID [" + message.getValue(FixTag::ClOrdID) + "]");
+        return;
+    }
+
+    Logger::instance().log("sent message to exchange for ClOrdID [" + message.getValue(FixTag::ClOrdID) + "]");
 }
 
 
 void OMEngine::handleExchangeAck(FixMessage message)
 {
     Logger::instance().log("OMEngine received ExchangeAck: [" + message.toString() + "]");
+
 
     /* TODO: - send a 35=UETR message to DB with key info */
 }

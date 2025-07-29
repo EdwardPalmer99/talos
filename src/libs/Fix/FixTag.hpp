@@ -18,6 +18,7 @@ enum FixTag
     ExecTransType = 20,
     ExecType = 150,
     IDSource = 22,
+    MsgSeqNo = 34,
     MsgType = 35,
     OrderQty = 38,
     Price = 44,

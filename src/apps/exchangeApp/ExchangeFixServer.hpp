@@ -13,12 +13,18 @@
 #include "Socket/FixServer.hpp"
 
 
-class Exchange : public FixServer, public FixClient
+class ExchangeFixServer : public FixServer, public FixClient
 {
 public:
-    Exchange(uint16_t exchangePort) : FixServer(exchangePort) {}
+    ExchangeFixServer(uint16_t exchangePort) : FixServer(exchangePort) {}
 
 protected:
     /* 35=8 */
     void handleFixMessage(FixMessage message) final;
+
+    /* 35=AR */
+    void broadcastTechAck(FixMessage &message);
+
+    /* 35=AE */
+    void broadcastFill(FixMessage &message);
 };
