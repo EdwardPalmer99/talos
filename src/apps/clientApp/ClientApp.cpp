@@ -12,6 +12,8 @@
 #include <stdexcept>
 #include <unistd.h>
 
+/* TODO: - rewrite to make consistent with the server application */
+
 ClientApp::ClientApp(int serverPort, std::size_t delayMS) : _delayMS(delayMS)
 {
     if (!_fixClient.connectToServer(serverPort))
@@ -38,7 +40,7 @@ void ClientApp::appLoop()
     while (!shouldStop())
     {
         _dummyFix.setTag(FixTag::ClOrdID, UUID::instance().generate(15)); /* New unique ID for client order */
-        _fixClient.broadcast(_dummyFix);                                  /* Broadcast to the Order Management System Engine */
+        _fixClient.broadcast(_dummyFix);                                  /* Broadcast to the Order Management System Engine - NO: use FixServer implementation */
 
         std::this_thread::sleep_for(std::chrono::milliseconds(_delayMS));
     }

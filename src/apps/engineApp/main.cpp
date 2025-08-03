@@ -23,7 +23,8 @@ int main(void)
 
     /* Basic version just to test we can receive messages from client */
     OMEngine engineServer(ConnectionPorts::OMEnginePort);
-    engineServer.connectToServer(ConnectionPorts::ExchangePort);
+    engineServer.start();
+    engineServer.connectToExchangeServer(ConnectionPorts::ExchangePort);
     engineServer.wait();
     return 0;
 }

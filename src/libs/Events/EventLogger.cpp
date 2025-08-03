@@ -82,6 +82,17 @@ void Logger::log(std::string message, Level level)
 }
 
 
+void Logger::setLogLevel(Level logLevel)
+{
+    {
+        std::unique_lock lock(_loggerMutex);
+        _logLevel = logLevel;
+    }
+
+    _conditionVariable.notify_one();
+}
+
+
 void Logger::loop()
 {
     while (true)

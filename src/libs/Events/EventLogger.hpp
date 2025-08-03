@@ -28,11 +28,13 @@ public:
 
     static Logger &instance();
 
+    void setLogLevel(Level logLevel);
+
     /* Thread-safe logging */
     void log(std::string message, Level level = Info);
 
     /* Thread-safe call to shutdown the logger loop. To be called by applications in their destructors */
-    void shutdown();
+    void shutdown(); /* TODO: - use start(), stop(), wait() like other applications */
 
 protected:
     Logger();
@@ -47,6 +49,9 @@ protected:
 
     std::string nowUTC() const;
 
+    /* Returns true if message is loggable */
+    inline bool isLoggable(Level level) const;
+
 private:
     mutable std::mutex _loggerMutex;
     std::thread _loggerThread; /* Logger thread for writing messages to log */
@@ -54,5 +59,15 @@ private:
 
     std::queue<std::string> _loggerQueue; /* Log messages to write to out */
 
+    Level _logLevel{Level::Info};
+
     bool _running{false};
 };
+
+
+bool Logger::isLoggable(Level level) const
+{
+    return (level >= _logLevel);
+}
+
+

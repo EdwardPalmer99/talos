@@ -14,12 +14,17 @@
 class FixServer : public Server
 {
 public:
-    FixServer(uint16_t serverPort);
+    FixServer(Port serverPort);
 
 protected:
     /* To be implemented. What to do when we receive a client Fix */
-    virtual void handleFixMessage(FixMessage message) = 0;
+    virtual void handleFixMessage(FixMessage message, SocketFD clientSocket) = 0;
+
+    /* Send a FIX message to a client */
+    void sendFixMessage(FixMessage message, SocketFD clientSocket);
 
 private:
-    void handleClientMessage(std::string message) final;
+    void handleMessage(Message clientMessage, SocketFD clientSocket) final;
+
+    using Server::sendMessage; /* Make private */
 };

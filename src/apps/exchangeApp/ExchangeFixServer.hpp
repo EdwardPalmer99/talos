@@ -9,22 +9,21 @@
 
 #pragma once
 #include "Fix/FixMessage.hpp"
-#include "Socket/FixClient.hpp"
 #include "Socket/FixServer.hpp"
 
 
-class ExchangeFixServer : public FixServer, public FixClient
+class ExchangeFixServer : public FixServer
 {
 public:
     ExchangeFixServer(uint16_t exchangePort) : FixServer(exchangePort) {}
 
 protected:
     /* 35=8 */
-    void handleFixMessage(FixMessage message) final;
+    void handleFixMessage(FixMessage clientFix, SocketFD clientSocket) final;
 
     /* 35=AR */
-    void broadcastTechAck(FixMessage &message);
+    void sendTechAck(FixMessage message, SocketFD clientSocket);
 
     /* 35=AE */
-    void broadcastFill(FixMessage &message);
+    void sendFill(FixMessage message, SocketFD clientSocket);
 };

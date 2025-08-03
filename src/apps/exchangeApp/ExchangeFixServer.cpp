@@ -12,55 +12,42 @@
 #include <chrono>
 
 
-void ExchangeFixServer::handleFixMessage(FixMessage message)
+void ExchangeFixServer::handleFixMessage(FixMessage clientFix, SocketFD clientSocket)
 {
-    Logger::instance().log("received Fix: [" + message.toString() + "]");
-
-    std::string msgType = message.getValue(FixTag::MsgType);
+    std::string msgType = clientFix.getValue(FixTag::MsgType);
     if (msgType != "8")
     {
-        Logger::instance().log("received invalid msgType [" + msgType + "]", Logger::Error);
+        Logger::instance().log("Received unsupported msgType [" + msgType + "] => dropping", Logger::Error);
         return;
     }
 
-    /* TODO: - Clients should have a queue of outgoing messages */
     std::this_thread::sleep_for(std::chrono::milliseconds(100)); /* add slight delay */
-    broadcastTechAck(message);
+    sendTechAck(clientFix, clientSocket);
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    broadcastFill(message);
+    std::this_thread::sleep_for(std::chrono::microseconds(100));
+    sendFill(clientFix, clientSocket);
 }
 
 
-void ExchangeFixServer::broadcastTechAck(FixMessage &message)
+void ExchangeFixServer::sendTechAck(FixMessage clientFix, SocketFD clientSocket)
 {
     /* Construct 35=AR message */
-    FixMessage ackMessage(message);
+    FixMessage ackMessage = std::move(clientFix);
     ackMessage.setTag(FixTag::MsgType, "AR");
     ackMessage.setTag(FixTag::ExecType, "0");
 
-    if (!broadcast(ackMessage))
-    {
-        Logger::instance().log("failed to send technical ack for ClOrdID [" + message.getValue(FixTag::ClOrdID) + "]");
-        return;
-    }
-
-    Logger::instance().log("sent technical ack for ClOrdID [" + message.getValue(FixTag::ClOrdID) + "]");
+    Logger::instance().log("Sent Tech Ack for ClOrdID: " + ackMessage.getValue(FixTag::ClOrdID));
+    sendFixMessage(std::move(ackMessage), clientSocket);
 }
 
 
-void ExchangeFixServer::broadcastFill(FixMessage &message)
+void ExchangeFixServer::sendFill(FixMessage clientFix, SocketFD clientSocket)
 {
     /* Construct 35=AE message */
-    FixMessage fillMessage(message);
+    FixMessage fillMessage = std::move(clientFix);
     fillMessage.setTag(FixTag::MsgType, "AE");
     fillMessage.setTag(FixTag::ExecType, "2"); /* Fill */
 
-    if (!broadcast(fillMessage))
-    {
-        Logger::instance().log("failed to send fill for ClOrdID [" + message.getValue(FixTag::ClOrdID) + "]");
-        return;
-    }
-
-    Logger::instance().log("sent fill for ClOrdID [" + message.getValue(FixTag::ClOrdID) + "]");
+    Logger::instance().log("Sent Fill for ClOrdID: " + fillMessage.getValue(FixTag::ClOrdID));
+    sendFixMessage(std::move(fillMessage), clientSocket);
 }

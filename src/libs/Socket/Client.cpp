@@ -14,6 +14,8 @@
 #include <stdexcept>
 #include <unistd.h>
 
+/* TODO: - combine code with Server. Server can inherit from Client and add listening loop etc */
+
 
 Client::Client()
 {

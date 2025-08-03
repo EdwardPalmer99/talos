@@ -14,8 +14,7 @@
 int main(void)
 {
     ExchangeFixServer exchange(ConnectionPorts::ExchangePort);
-    exchange.connectToServer(ConnectionPorts::OMEnginePort);
-
+    exchange.start();
     exchange.wait();
     return 0;
 }

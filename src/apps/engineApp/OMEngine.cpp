@@ -14,24 +14,38 @@
 #include <stdexcept>
 #include <string>
 
+
+bool OMEngine::connectToExchangeServer(Port exchangePort)
+{
+    bool ok = connectToServer(exchangePort);
+    if (ok)
+    {
+        _exchangeSocket = _portSocketMappings.getSocket(exchangePort);
+    }
+
+    return ok;
+}
+
+
 /* TODO: - add alerting manager on separate instance */
 /* TODO: - Client trade booking application needs to stamp unique ClOrdID on messages */
 /* TODO: - OMEngine also needs to check for no response from Exchange and trigger an alert */
 /* TODO: - Add-in an OMRouter to enable RoundRobin routing to multiple OMEngines */
 
-void OMEngine::handleFixMessage(FixMessage message)
+void OMEngine::handleFixMessage(FixMessage fixMsg, SocketFD senderSocket)
 {
-    std::string msgType = message.getValue(FixTag::MsgType);
+    std::string msgType = fixMsg.getValue(FixTag::MsgType);
 
+    /* TODO: - write special enum to convert string to enum */
     if (msgType == "8")
-        return handleClientFixMessage(std::move(message));
+        return handleClientFixMessage(std::move(fixMsg));
     else if (msgType == "AR")
-        return handleExchangeAck(std::move(message));
+        return handleExchangeAck(std::move(fixMsg));
     else if (msgType == "AE")
-        return handleExchangeFill(std::move(message));
+        return handleExchangeFill(std::move(fixMsg));
 
+    Logger::instance().log("Invalid message type [" + msgType + "]", Logger::Error);
     /* TODO: - handle; send alert to OMAlert to notify humans */
-    throw std::runtime_error("received invalid msgType [" + msgType + "]");
 }
 
 
@@ -40,34 +54,32 @@ void OMEngine::handleClientFixMessage(FixMessage message)
     /* TODO: - Send a message to our DB */
     /* TODO: - stamp some additional tags on such as senderID and send to exchange */
 
-    Logger::instance().log("OMEngine received ClientFix: [" + message.toString() + "]");
+    /**
+     *
+     * TODO: - add a Router class to abstract away which destination to send to
+     */
 
     message.setTag(FixTag::Trace, message.getValue(FixTag::Trace) + "/OMEngine");
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-    if (!broadcast(message)) /* Route down to exchange */
-    {
-        Logger::instance().log("failed to send message to exchange for ClOrdID [" + message.getValue(FixTag::ClOrdID) + "]");
-        return;
-    }
-
-    Logger::instance().log("sent message to exchange for ClOrdID [" + message.getValue(FixTag::ClOrdID) + "]");
+    /* Route to exchange */
+    sendFixMessage(message, _exchangeSocket);
 }
 
 
 void OMEngine::handleExchangeAck(FixMessage message)
 {
-    Logger::instance().log("OMEngine received ExchangeAck: [" + message.toString() + "]");
-
-
+    Logger::instance().log("Processing Exchange Ack. for ClOrdID " + message.getValue(FixTag::ClOrdID));
     /* TODO: - send a 35=UETR message to DB with key info */
+    /* TODO: - keep a track somewhere of order status locally --> match by ClOrdID in message --> update DB on status */
+    /* DB: ClOrdID price qty product ... status */
 }
 
 
 void OMEngine::handleExchangeFill(FixMessage message)
 {
-    Logger::instance().log("OMEngine received ExchangeFill: [" + message.toString() + "]");
+    Logger::instance().log("Processing Exchange Fill for ClOrdID " + message.getValue(FixTag::ClOrdID));
 
     /* TODO: - send a 35=UETR message to DB with key info */
 }

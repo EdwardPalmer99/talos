@@ -27,21 +27,63 @@
  *                      |
  *                   Exchange
  */
-class OMEngine : public FixServer, public FixClient
+class OMEngine : public FixServer
 {
 public:
-    OMEngine(uint16_t enginePort) : FixServer(enginePort) {}
+    OMEngine() = delete;
+
+    OMEngine(Port enginePort) : FixServer(enginePort) {}
+
+    /* Setup connection to exchange server. Should be called after start() and before wait() */
+    bool connectToExchangeServer(Port exchangePort);
 
 protected:
+    using FixServer::connectToServer; /* Protect since we have the exchange, DB methods */
+
     /* 35=8 */
-    virtual void handleClientFixMessage(FixMessage message);
+    void handleClientFixMessage(FixMessage fixMsg);
 
     /* 35=AR */
-    virtual void handleExchangeAck(FixMessage message);
+    void handleExchangeAck(FixMessage fixMsg);
 
     /* 35=AE */
-    virtual void handleExchangeFill(FixMessage message);
+    void handleExchangeFill(FixMessage fixMsg);
 
 private:
-    void handleFixMessage(FixMessage message) final;
+    void handleFixMessage(FixMessage fixMsg, SocketFD senderSocket) final;
+
+    /* Store the DB and Exchange connection sockets here for sending messages to right destination */
+    SocketFD _exchangeSocket{-1};
+
+    class OrderState
+    {
+    public:
+        struct Order
+        {
+            /* Key tags from the FIX message */
+
+            enum Status
+            {
+                PendingNew, /* Received 35=8 message */
+                New,        /* Received 35=AR message */
+                Fill,       /* Received 35=AE message */
+            };
+
+            FixMessage clientFix;
+
+            int side;
+            int qty;
+            double price;
+            std::string currency;
+            /* TODO: - add product, originator tags, etc. */
+
+            Status orderStatus{PendingNew};
+        };
+
+        void updateOrder(const FixMessage &fix); /* Updates using new FIX type */
+
+    private:
+        /* Maps from ClOrdID (11) --> Order */
+        std::unordered_map<std::string, Order> _clientOrderMap;
+    };
 };
