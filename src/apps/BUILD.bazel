@@ -1,0 +1,27 @@
+cc_binary(
+    name="exchange_app",
+    srcs=glob(["exchangeApp/*.cpp", "exchangeApp/*.hpp"]),
+    deps=[
+        "//src/libs:order_management_system_lib"
+    ],
+    includes=["exchangeApp"],
+    visibility=["//visibility:public"]
+)
+
+cc_binary(
+    name="client_app",
+    srcs=glob(["clientApp/*.cpp", "clientApp/*.hpp"]),
+    deps=[
+        "//src/libs:order_management_system_lib"
+    ],
+    includes=["clientApp"],
+    visibility=["//visibility:public"]
+)
+
+cc_binary(
+    name = "engine_app",
+    srcs = glob(["engineApp/*.cpp", "engineApp/*.hpp"]),
+    deps = ["//src/libs:order_management_system_lib"],
+    includes = ["engineApp"],
+    visibility = ["//visibility:public"]
+)

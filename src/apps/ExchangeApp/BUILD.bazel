@@ -1,7 +1,0 @@
-cc_binary(
-    name = "exchange_app",
-    srcs = glob(["*.cpp", "*.hpp"]),
-    deps = ["//src/libs:order_management_system_lib"],
-    includes = ["."],
-    visibility = ["//visibility:public"]
-)

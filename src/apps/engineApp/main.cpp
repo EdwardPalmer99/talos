@@ -8,6 +8,7 @@
  */
 
 #include "OMEngine.hpp"
+#include "Socket/ConnectionPorts.hpp"
 #include <string>
 
 /**
@@ -21,9 +22,9 @@ int main(void)
 
 
     /* Basic version just to test we can receive messages from client */
-    OMEngine engineServer(8080, 8081);
-
+    OMEngine engineServer(ConnectionPorts::OMEnginePort);
     engineServer.start();
-
+    engineServer.connectToExchangeServer(ConnectionPorts::ExchangePort);
+    engineServer.wait();
     return 0;
 }

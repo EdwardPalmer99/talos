@@ -8,14 +8,26 @@
  */
 
 #include "FixServer.hpp"
+#include "Events/EventLogger.hpp"
 
-FixServer::FixServer(uint16_t serverPort) : Server(serverPort)
+
+FixServer::FixServer(Port serverPort) : Server(serverPort)
 {
 }
 
 
-void FixServer::handleClientMessage(std::string message)
+void FixServer::handleMessage(Message clientMessage, SocketFD clientSocket)
 {
-    /* Construct Fix message and pass to handleFixMessage */
-    handleFixMessage(FixMessage(std::move(message)));
+    /* Construct FIX message and pass down to handleFixMessage() */
+    Logger::instance().log("Received FixMsg (source: " + std::to_string(clientSocket) + "): " + clientMessage);
+    handleFixMessage(FixMessage(std::move(clientMessage)), clientSocket);
+}
+
+
+void FixServer::sendFixMessage(FixMessage message, SocketFD clientSocket)
+{
+    /* TODO: - set tag 52 on outgoing message to sending time */
+
+    Logger::instance().log("Sent FixMsg (destination: " + std::to_string(clientSocket) + "): " + message.toString());
+    sendMessage(message.toString(), clientSocket);
 }

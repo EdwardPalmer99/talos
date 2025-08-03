@@ -8,77 +8,66 @@
  */
 
 #include "Client.hpp"
+#include "Events/EventLogger.hpp"
+#include <arpa/inet.h>
 #include <iostream>
 #include <stdexcept>
 #include <unistd.h>
 
+/* TODO: - combine code with Server. Server can inherit from Client and add listening loop etc */
 
-Client::Client(uint16_t serverPort)
+
+Client::Client()
 {
-    /* Server address */
-    _serverAddress.sin_family = AF_INET;         /* IPV4 */
-    _serverAddress.sin_port = htons(serverPort); /* Port */
-    _serverAddress.sin_addr.s_addr = INADDR_ANY; /* Accept all incoming messages */
-
     /* Client socket */
     if ((_clientSocket = socket(AF_INET, SOCK_STREAM, 0)) == (-1))
     {
         throw std::runtime_error("failed to create client socket");
-    }
-
-    /* Establish a connection to the server */
-    // TODO: - try this in some sort of loop with a timeout
-    if (!doConnect())
-    {
-        throw std::runtime_error("failed to connect to server");
     }
 }
 
 
 Client::~Client()
 {
-    /* Close an active connection */
-    (void)doDisconnect();
+    if (close(_clientSocket) == (-1))
+    {
+        Logger::instance().log("failed to close socket " + std::to_string(_clientSocket), Logger::Error);
+    }
 }
 
 
-bool Client::doConnect()
+bool Client::connectToServer(int serverPort)
 {
-    int result = connect(_clientSocket, (struct sockaddr *)&_serverAddress, sizeof(_serverAddress));
-    if (result == (-1))
+    /* Address of server we would like to connect to */
+    sockaddr_in serverAddress;
+
+    serverAddress.sin_family = AF_INET;                     /* IPV4 */
+    serverAddress.sin_port = htons(serverPort);             /* Port */
+    serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1"); /* Connect to localhost */
+
+    if (connect(_clientSocket, (const struct sockaddr *)&serverAddress, sizeof(serverAddress)) == (-1))
     {
-        /* TODO: - use thread-safe logger here */
-        std::cerr << "failed to connect" << std::endl;
+        Logger::instance().log("failed to connect to server on port " + std::to_string(serverPort));
         return false;
     }
 
+    Logger::instance().log("connected to server on port " + std::to_string(serverPort));
     return true;
 }
 
+/* TODO: - write a send queue. So can operate this on any thread and will send on a background thread */
 
-bool Client::doDisconnect()
+
+bool Client::broadcast(std::string message)
 {
-    int result = close(_clientSocket);
-    if (result == (-1))
+    std::unique_lock lock(_mutex);
+
+    if (send(_clientSocket, message.c_str(), message.size(), 0) == (-1))
     {
-        std::cerr << "failed to close socket" << std::endl;
+        Logger::instance().log("failed to broadcast message", Logger::Error);
         return false;
     }
 
-    return true;
-}
-
-
-bool Client::doSend(std::string message)
-{
-    int result = send(_clientSocket, message.c_str(), message.size(), 0);
-    if (result == (-1))
-    {
-        std::cerr << "failed to send message: " << message << std::endl;
-        return false;
-    }
-
-    /* TODO: - verify bytes here */
-
+    Logger::instance().log("sent message: " + message);
     return true;
 }

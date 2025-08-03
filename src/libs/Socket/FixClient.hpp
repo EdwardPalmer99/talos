@@ -11,17 +11,21 @@
 #include "Client.hpp"
 #include "Fix/FixMessage.hpp"
 #include "Fix/FixTag.hpp"
+#include <atomic>
 #include <string>
 
 
-class FixClient : protected Client
+class FixClient : public Client
 {
 public:
-    FixClient() = delete;
-    FixClient(uint16_t serverPort);
+    FixClient() = default;
 
-    bool doSend(FixMessage &message);
+    /* Thread-safe broadcast to all servers */
+    bool broadcast(FixMessage &message);
 
 protected:
     std::string sendingTimeUTC() const;
+
+private:
+    std::atomic<long> _msgSeqNo{1};
 };
