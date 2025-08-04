@@ -8,9 +8,9 @@
  */
 
 #include "TradingEngine.hpp"
-#include "Events/Event.hpp"
-#include "Events/EventLogger.hpp"
 #include "MarketDataFeedHandler.hpp"
+#include "events/Event.hpp"
+#include "events/EventLogger.hpp"
 #include <iostream>
 #include <sstream>
 

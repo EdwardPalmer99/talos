@@ -8,7 +8,7 @@
  */
 
 #pragma once
-#include "Events/EventPublisher.hpp"
+#include "events/EventPublisher.hpp"
 #include <queue>
 #include <string>
 #include <thread>

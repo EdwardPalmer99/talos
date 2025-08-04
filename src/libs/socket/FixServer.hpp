@@ -8,8 +8,8 @@
  */
 
 #pragma once
-#include "Fix/FixMessage.hpp"
 #include "Server.hpp"
+#include "fix/FixMessage.hpp"
 
 class FixServer : public Server
 {

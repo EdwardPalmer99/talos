@@ -8,7 +8,7 @@
  */
 
 #include "ExchangeFixServer.hpp"
-#include "Socket/ConnectionPorts.hpp"
+#include "socket/ConnectionPorts.hpp"
 
 
 int main(void)

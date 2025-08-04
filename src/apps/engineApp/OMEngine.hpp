@@ -8,9 +8,9 @@
  */
 
 #pragma once
-#include "Fix/FixMessage.hpp"
-#include "Socket/FixClient.hpp"
-#include "Socket/FixServer.hpp"
+#include "fix/FixMessage.hpp"
+#include "socket/FixClient.hpp"
+#include "socket/FixServer.hpp"
 
 // TODO: - be smarter with a Queue when we receive messages
 /**

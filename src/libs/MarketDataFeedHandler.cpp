@@ -8,8 +8,8 @@
  */
 
 #include "MarketDataFeedHandler.hpp"
-#include "Events/Event.hpp"
-#include "Events/EventLogger.hpp"
+#include "events/Event.hpp"
+#include "events/EventLogger.hpp"
 #include <stdexcept>
 
 

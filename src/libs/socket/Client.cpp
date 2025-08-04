@@ -8,7 +8,7 @@
  */
 
 #include "Client.hpp"
-#include "Events/EventLogger.hpp"
+#include "events/EventLogger.hpp"
 #include <arpa/inet.h>
 #include <iostream>
 #include <stdexcept>

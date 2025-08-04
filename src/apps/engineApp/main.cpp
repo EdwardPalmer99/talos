@@ -8,7 +8,7 @@
  */
 
 #include "OMEngine.hpp"
-#include "Socket/ConnectionPorts.hpp"
+#include "socket/ConnectionPorts.hpp"
 #include <string>
 
 /**

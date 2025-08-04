@@ -9,9 +9,9 @@
 
 
 #pragma once
-#include "Events/Event.hpp"
-#include "Events/EventSubscriber.hpp"
-#include "Utilities/MovingAverage.hpp"
+#include "events/Event.hpp"
+#include "events/EventSubscriber.hpp"
+#include "utilities/MovingAverage.hpp"
 #include <string>
 
 

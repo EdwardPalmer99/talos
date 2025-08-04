@@ -9,7 +9,7 @@
 
 #pragma once
 #include "App.hpp"
-#include "Socket/FixClient.hpp"
+#include "socket/FixClient.hpp"
 
 /**
  * Simulates a front-office application for traders to book, amend, cancel trades

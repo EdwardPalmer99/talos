@@ -8,9 +8,9 @@
  */
 
 #include "MarketDataSimulator.hpp"
-#include "Events/Event.hpp"
-#include "Events/EventLogger.hpp"
 #include "MarketDataFeedHandler.hpp"
+#include "events/Event.hpp"
+#include "events/EventLogger.hpp"
 #include <cstdlib>
 #include <fstream>
 #include <iostream>

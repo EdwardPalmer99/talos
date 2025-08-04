@@ -8,8 +8,8 @@
  */
 
 #pragma once
-#include "Fix/FixMessage.hpp"
-#include "Socket/FixServer.hpp"
+#include "fix/FixMessage.hpp"
+#include "socket/FixServer.hpp"
 
 
 class ExchangeFixServer : public FixServer

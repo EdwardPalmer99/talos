@@ -8,7 +8,7 @@
  */
 
 #include "ClientApp.hpp"
-#include "Utilities/UUID.hpp"
+#include "utilities/UUID.hpp"
 #include <stdexcept>
 #include <unistd.h>
 

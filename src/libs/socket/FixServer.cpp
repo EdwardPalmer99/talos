@@ -8,7 +8,7 @@
  */
 
 #include "FixServer.hpp"
-#include "Events/EventLogger.hpp"
+#include "events/EventLogger.hpp"
 
 
 FixServer::FixServer(Port serverPort) : Server(serverPort)

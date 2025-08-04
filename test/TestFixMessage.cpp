@@ -7,8 +7,8 @@
  *
  */
 
-#include <Fix/FixMessage.hpp>
-#include <Fix/FixTag.hpp>
+#include <fix/FixMessage.hpp>
+#include <fix/FixTag.hpp>
 #include <gtest/gtest.h>
 #include <iostream>
 
