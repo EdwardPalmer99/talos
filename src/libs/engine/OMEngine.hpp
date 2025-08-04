@@ -65,9 +65,8 @@ private:
     SocketFD _exchangeSocket{-1};
     SocketFD _databaseSocket{-1};
 
-    /* TODO: - bit inefficient and may may slow-down for multiple clients. Can use a tag on the FIX to identify original sender */
-    /* Required for correctly routing messages received from the exchange back to the client */
     /* TODO: - encapsulate in a struct */
+    /* TODO: - use a shared hash map for lower-latency and to make it more lock-free for higher-performance */
     std::shared_mutex _clientSocketMutex;
     std::unordered_map<std::string, SocketFD> _clientSocketForClOrdID;
 
