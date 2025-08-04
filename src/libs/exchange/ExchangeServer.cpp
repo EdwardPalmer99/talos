@@ -39,7 +39,7 @@ void ExchangeServer::sendPartialFill(FixMessage clientFix, SocketFD clientSocket
     FixMessage ackMessage = std::move(clientFix);
     ackMessage.setTag(FixTag::MsgType, "8");
     ackMessage.setTag(FixTag::ExecType, "1");
-    ackMessage.setTag(FixTag::OrderQty, "1");
+    ackMessage.setTag(FixTag::OrdStatus, "1");
     /* TODO: - set remaining tags */
 
     sendFixMessage(std::move(ackMessage), clientSocket);
@@ -52,7 +52,7 @@ void ExchangeServer::sendFill(FixMessage clientFix, SocketFD clientSocket)
     FixMessage fillMessage = std::move(clientFix);
     fillMessage.setTag(FixTag::MsgType, "8");
     fillMessage.setTag(FixTag::ExecType, "2"); /* Fill */
-    fillMessage.setTag(FixTag::OrderQty, "2");
+    fillMessage.setTag(FixTag::OrdStatus, "2");
     /* TODO: - set remaining tags */
 
     sendFixMessage(std::move(fillMessage), clientSocket);

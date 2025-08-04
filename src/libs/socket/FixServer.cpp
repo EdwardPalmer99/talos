@@ -37,7 +37,7 @@ void FixServer::enrichFixMessage(FixMessage &fixMsg)
 {
     /* TODO: - update the MsgSeqNo for that connection */
     fixMsg.setTag(FixTag::SendingTime, nowUTC());
-    fixMsg.setTag(FixTag::SenderSubID, "OMEngine:" + std::to_string(port()));
+    fixMsg.setTag(FixTag::SenderSubID, std::to_string(port())); /* TODO: - add option to override this */
 }
 
 

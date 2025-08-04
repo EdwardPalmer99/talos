@@ -97,9 +97,11 @@ void OMEngine::handleExchangeFixMessage(FixMessage exchFixMsg, SocketFD exchange
     {
         handleExchangeFill(std::move(exchFixMsg), exchangeSocket);
     }
-
-    /* Handle other cases */
-    Logger::instance().error("Not handling exchange message with order status: " + orderStatus);
+    else
+    {
+        /* Handle other cases */
+        Logger::instance().error("Not handling exchange message with order status [" + orderStatus + "]");
+    }
 }
 
 
@@ -143,7 +145,6 @@ void OMEngine::handleExchangeFill(FixMessage exchFixMsg, SocketFD)
         sendFixMessage(exchFixMsg, clientSocket);
 
     sendFixMessage(exchFixMsg, _databaseSocket);
-
 }
 
 
