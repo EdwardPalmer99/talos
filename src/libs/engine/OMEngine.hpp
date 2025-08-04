@@ -65,7 +65,6 @@ private:
     SocketFD _exchangeSocket{-1};
     SocketFD _databaseSocket{-1};
 
-
     /* TODO: - bit inefficient and may may slow-down for multiple clients. Can use a tag on the FIX to identify original sender */
     /* Required for correctly routing messages received from the exchange back to the client */
     /* TODO: - encapsulate in a struct */
@@ -75,4 +74,7 @@ private:
     SocketFD getClientSocket(std::string clientOrdID);
 
     void updateClientSocketMap(std::string clOrdID, SocketFD clientSocket);
+
+    /* Call when we have completed an order (or it was rejected) */
+    void eraseClientSocketMap(std::string clOrdID);
 };

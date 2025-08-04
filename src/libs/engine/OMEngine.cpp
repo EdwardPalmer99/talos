@@ -113,6 +113,8 @@ void OMEngine::handleExchangePartialFill(FixMessage exchFixMsg, SocketFD)
     /* TODO: - enrich some tags here */
     SocketFD clientSocket = getClientSocket(clOrdID);
 
+    /* NB: do not erase clOrdID from map => wait for Fill/Rejection */
+
     if (clientSocket == (-1))
         Logger::instance().error("No client socket found for clOrdID " + clOrdID);
     else
@@ -132,12 +134,16 @@ void OMEngine::handleExchangeFill(FixMessage exchFixMsg, SocketFD)
     /* TODO: - enrich some tags here */
     SocketFD clientSocket = getClientSocket(clOrdID);
 
+    /* Now we have a fill, we can erase the clOrdID from the map to save memory */
+    eraseClientSocketMap(clOrdID);
+
     if (clientSocket == (-1))
         Logger::instance().error("No client socket found for clOrdID " + clOrdID);
     else
         sendFixMessage(exchFixMsg, clientSocket);
 
     sendFixMessage(exchFixMsg, _databaseSocket);
+
 }
 
 
@@ -154,4 +160,11 @@ void OMEngine::updateClientSocketMap(std::string clOrdID, SocketFD clientSocket)
 {
     std::unique_lock lock(_clientSocketMutex);
     _clientSocketForClOrdID[clOrdID] = clientSocket;
+}
+
+
+void OMEngine::eraseClientSocketMap(std::string clOrdID)
+{
+    std::unique_lock lock(_clientSocketMutex);
+    _clientSocketForClOrdID.erase(clOrdID);
 }
