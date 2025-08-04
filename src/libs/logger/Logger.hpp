@@ -8,15 +8,29 @@
  */
 
 #pragma once
+#include <atomic>
 #include <condition_variable>
 #include <mutex>
 #include <queue>
 #include <string>
 #include <thread>
+#include <unordered_map>
+
 
 class Logger
 {
 public:
+    Logger(const Logger &) = delete;
+    Logger &operator=(const Logger &) = delete;
+
+    static Logger &instance();
+
+    void start();
+
+    void stop();
+
+    void wait();
+
     enum Level
     {
         Debug = 0,
@@ -26,46 +40,65 @@ public:
         Critical = 4
     };
 
-    static Logger &instance();
-
-    void setLogLevel(Level logLevel);
-
-    /* Thread-safe logging */
     void log(std::string message, Level level = Info);
 
-    /* Thread-safe call to shutdown the logger loop. To be called by applications in their destructors */
-    void shutdown(); /* TODO: - use start(), stop(), wait() like other applications */
+    void setLevel(Level level);
+
+    inline void debug(std::string message);
+    inline void info(std::string message);
+    inline void warn(std::string message);
+    inline void error(std::string message);
+    inline void critical(std::string message);
 
 protected:
     Logger();
-    Logger(const Logger &) = delete;
-    Logger &operator=(const Logger &) = delete;
-
     ~Logger();
 
-    void loop();
+    bool isLoggable(Level level);
 
-    std::string levelToString(Level level) const;
+    const std::string &logLevelName(Level level) const;
 
     std::string nowUTC() const;
 
-    /* Returns true if message is loggable */
-    inline bool isLoggable(Level level) const;
+    void loggerLoop();
 
 private:
     mutable std::mutex _loggerMutex;
-    std::thread _loggerThread; /* Logger thread for writing messages to log */
-    std::condition_variable _conditionVariable;
+    std::thread _loggerThread;
+    std::condition_variable _loggerCV;
+    std::queue<std::string> _loggerQueue;
+    std::unordered_map<Level, std::string> _nameForLogLevel;
 
-    std::queue<std::string> _loggerQueue; /* Log messages to write to out */
-
-    Level _logLevel{Level::Info};
-
-    bool _running{false};
+    std::atomic<bool> _running{false};
+    std::atomic<Level> _logLevel{Level::Info};
 };
 
 
-bool Logger::isLoggable(Level level) const
+void Logger::debug(std::string message)
 {
-    return (level >= _logLevel);
+    log(std::move(message), Debug);
+}
+
+
+void Logger::info(std::string message)
+{
+    log(std::move(message), Info);
+}
+
+
+void Logger::warn(std::string message)
+{
+    log(std::move(message), Warn);
+}
+
+
+void Logger::error(std::string message)
+{
+    log(std::move(message), Error);
+}
+
+
+void Logger::critical(std::string message)
+{
+    log(std::move(message), Critical);
 }

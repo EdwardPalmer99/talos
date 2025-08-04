@@ -47,11 +47,11 @@ public:
     /* Starts the server; nonblocking */
     void start();
 
-    /* Waits for server completion; blocking */
-    void wait();
-
     /* Shutdown the server; nonblocking */
     void stop();
+
+    /* Waits for server completion; blocking */
+    void wait();
 
 protected:
     Server() = delete;

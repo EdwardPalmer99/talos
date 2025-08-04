@@ -14,6 +14,8 @@
 
 /* TODO: - rewrite to make consistent with the server application */
 
+/* TODO: - completely rewrite this stuff. We need to be able to handle Received messages from OM system */
+
 ClientApp::ClientApp(int serverPort, std::size_t delayMS) : _delayMS(delayMS)
 {
     if (!_fixClient.connectToServer(serverPort))
@@ -24,14 +26,17 @@ ClientApp::ClientApp(int serverPort, std::size_t delayMS) : _delayMS(delayMS)
     /* Setup dummy Fix */
     int clientSocket = _fixClient.clientSocket();
 
-    _dummyFix.setTag(FixTag::MsgType, "8");
+    _dummyFix.setTag(FixTag::MsgType, "D");
     _dummyFix.setTag(FixTag::Side, "1");
     _dummyFix.setTag(FixTag::Currency, "GBP");
     _dummyFix.setTag(FixTag::OrderQty, "1");
     _dummyFix.setTag(FixTag::Price, "100.00");
     _dummyFix.setTag(FixTag::ExecTransType, "0");
-    _dummyFix.setTag(FixTag::ExecType, "0");
-    _dummyFix.setTag(FixTag::Trace, "Client" + std::to_string(clientSocket));
+    _dummyFix.setTag(FixTag::ExecTransType, "0"); // 20=0
+    _dummyFix.setTag(FixTag::ExecType, "0");      // 150=0
+    _dummyFix.setTag(FixTag::OrderQty, "0");      // 39=0 (New)
+    _dummyFix.setTag(FixTag::SenderSubID, "Client:" + std::to_string(clientSocket));
+    /* TODO: - add security and other tags */
 }
 
 

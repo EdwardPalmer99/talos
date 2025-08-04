@@ -22,33 +22,103 @@ Logger &Logger::instance()
 
 Logger::Logger()
 {
-    _running = true;
-    _loggerThread = std::thread(&Logger::loop, this);
+    _nameForLogLevel = {
+        {Debug, "debug"},
+        {Info, "info"},
+        {Warn, "warn"},
+        {Error, "error"},
+        {Critical, "critical"}};
 }
 
 
 Logger::~Logger()
 {
-    shutdown();
+    stop();
+    wait(); /* Ensures logger shutdown completed */
 }
 
 
-std::string Logger::levelToString(Level level) const
+const std::string &Logger::logLevelName(Level level) const
 {
-    switch (level)
+    return _nameForLogLevel.at(level);
+}
+
+
+bool Logger::isLoggable(Level level)
+{
+    return (level >= _logLevel);
+}
+
+
+void Logger::setLevel(Level level)
+{
+    _logLevel = level;
+}
+
+
+void Logger::start()
+{
+    if (_running)
+        return;
+
+    _running = true;
+    _loggerThread = std::thread(&Logger::loggerLoop, this);
+}
+
+
+void Logger::stop()
+{
+    if (!_running)
+        return;
+
+    _running = false;
+    _loggerCV.notify_one(); /* Wake-up the logger thread */
+}
+
+
+void Logger::wait()
+{
+    if (_loggerThread.joinable())
+        _loggerThread.join();
+}
+
+
+void Logger::log(std::string message, Level level)
+{
+    if (!isLoggable(level))
+        return;
+
+    /* Construct our output message */
+    std::ostringstream os;
+    os << nowUTC() << " " << logLevelName(level) << ": " << std::move(message);
+
     {
-        case Debug:
-            return "debug";
-        case Info:
-            return "info";
-        case Warn:
-            return "warn";
-        case Error:
-            return "error";
-        case Critical:
-            return "critical";
-        default:
-            return "";
+        std::unique_lock lock(_loggerMutex);
+        _loggerQueue.push(os.str());
+    } /* End of lock scope. Call notify after unlocking to avoid waking-up waiting thread only to block again */
+
+    _loggerCV.notify_one();
+}
+
+
+void Logger::loggerLoop()
+{
+    while (true)
+    {
+        std::unique_lock lock(_loggerMutex);
+        _loggerCV.wait(lock, [this]()
+        {
+            return (!_loggerQueue.empty() || !_running);
+        });
+
+        if (!_running) /* Terminate */
+        {
+            std::cout << std::flush; /* Flush anything remaining to stdout */
+            return;
+        }
+
+        std::cout << _loggerQueue.front() << std::endl;
+        _loggerQueue.pop();
     }
 }
 
@@ -64,74 +134,4 @@ std::string Logger::nowUTC() const
     os << std::put_time(gmtime_r(&currentTime, &currentGMTime), "%Y%m%d-%H:%M:%S");
 
     return os.str();
-}
-
-
-void Logger::log(std::string message, Level level)
-{
-    /* Construct our output message */
-    std::ostringstream os;
-    os << nowUTC() << " " << levelToString(level) << ": " << std::move(message);
-
-    {
-        std::unique_lock lock(_loggerMutex);
-        _loggerQueue.push(os.str());
-    } /* End of lock scope. Call notify after unlocking to avoid waking-up waiting thread only to block again */
-
-    _conditionVariable.notify_one();
-}
-
-
-void Logger::setLogLevel(Level logLevel)
-{
-    {
-        std::unique_lock lock(_loggerMutex);
-        _logLevel = logLevel;
-    }
-
-    _conditionVariable.notify_one();
-}
-
-
-void Logger::loop()
-{
-    while (true)
-    {
-        std::unique_lock lock(_loggerMutex);
-        _conditionVariable.wait(lock, [this]()
-        {
-            return (!_loggerQueue.empty() || !_running);
-        });
-
-        if (!_running) /* Terminate */
-        {
-            return;
-        }
-
-        std::cout << _loggerQueue.front() << std::endl
-                  << std::flush;
-
-        _loggerQueue.pop();
-    }
-}
-
-
-void Logger::shutdown()
-{
-    if (!_running)
-    {
-        return; /* Already shutdown */
-    }
-
-    {
-        std::unique_lock lock(_loggerMutex);
-        _running = false;
-    } /* End of lock scope */
-
-    _conditionVariable.notify_one();
-
-    if (_loggerThread.joinable())
-    {
-        _loggerThread.join(); /* Prevent continuing until loop() terminates */
-    }
 }

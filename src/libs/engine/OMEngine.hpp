@@ -11,6 +11,8 @@
 #include "fix/FixMessage.hpp"
 #include "socket/FixClient.hpp"
 #include "socket/FixServer.hpp"
+#include <shared_mutex>
+#include <unordered_map>
 
 // TODO: - be smarter with a Queue when we receive messages
 /**
@@ -37,53 +39,40 @@ public:
     /* Setup connection to exchange server. Should be called after start() and before wait() */
     bool connectToExchangeServer(Port exchangePort);
 
+    bool connectToDatabaseServer(Port databasePort);
+
 protected:
     using FixServer::connectToServer; /* Protect since we have the exchange, DB methods */
 
+    /* 35=D */
+    void handleClientFixMessage(FixMessage fixMsg, SocketFD senderSocket);
+
     /* 35=8 */
-    void handleClientFixMessage(FixMessage fixMsg);
+    void handleExchangeFixMessage(FixMessage fixMsg, SocketFD senderSocket);
 
-    /* 35=AR */
-    void handleExchangeAck(FixMessage fixMsg);
+    /* 39=1, 150=1 */
+    void handleExchangePartialFill(FixMessage fixMsg, SocketFD senderSocket);
 
-    /* 35=AE */
-    void handleExchangeFill(FixMessage fixMsg);
+    /* 39=2, 150=2 */
+    void handleExchangeFill(FixMessage fixMsg, SocketFD senderSocket);
+
+    /* TODO: - handle other exchange states and client cancellation/corrections */
 
 private:
     void handleFixMessage(FixMessage fixMsg, SocketFD senderSocket) final;
 
     /* Store the DB and Exchange connection sockets here for sending messages to right destination */
     SocketFD _exchangeSocket{-1};
+    SocketFD _databaseSocket{-1};
 
-    class OrderState
-    {
-    public:
-        struct Order
-        {
-            /* Key tags from the FIX message */
 
-            enum Status
-            {
-                PendingNew, /* Received 35=8 message */
-                New,        /* Received 35=AR message */
-                Fill,       /* Received 35=AE message */
-            };
+    /* TODO: - bit inefficient and may may slow-down for multiple clients. Can use a tag on the FIX to identify original sender */
+    /* Required for correctly routing messages received from the exchange back to the client */
+    /* TODO: - encapsulate in a struct */
+    std::shared_mutex _clientSocketMutex;
+    std::unordered_map<std::string, SocketFD> _clientSocketForClOrdID;
 
-            FixMessage clientFix;
+    SocketFD getClientSocket(std::string clientOrdID);
 
-            int side;
-            int qty;
-            double price;
-            std::string currency;
-            /* TODO: - add product, originator tags, etc. */
-
-            Status orderStatus{PendingNew};
-        };
-
-        void updateOrder(const FixMessage &fix); /* Updates using new FIX type */
-
-    private:
-        /* Maps from ClOrdID (11) --> Order */
-        std::unordered_map<std::string, Order> _clientOrderMap;
-    };
+    void updateClientSocketMap(std::string clOrdID, SocketFD clientSocket);
 };

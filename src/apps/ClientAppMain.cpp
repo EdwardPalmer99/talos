@@ -1,20 +1,20 @@
 /**
  * @file main.cpp
  * @author Edward Palmer
- * @date 2025-07-29
+ * @date 2025-07-26
  *
  * @copyright Copyright (c) 2025
  *
  */
 
-#include "ExchangeFixServer.hpp"
+#include "client/ClientApp.hpp"
 #include "socket/ConnectionPorts.hpp"
-
 
 int main(void)
 {
-    ExchangeFixServer exchange(ConnectionPorts::ExchangePort);
-    exchange.start();
-    exchange.wait();
+    ClientApp app(ConnectionPorts::OMEnginePort, 1000);
+    app.start();
+    app.wait();
+
     return 0;
 }

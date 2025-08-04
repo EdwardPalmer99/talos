@@ -13,6 +13,7 @@
 
 App::App()
 {
+    Logger::instance().start();
     Logger::instance().log("starting App...");
 }
 
@@ -22,8 +23,9 @@ App::~App()
     Logger::instance().log("shutting-down App...");
 
     stop();
-    wait();                        /* Ensure thread completes before destructing app */
-    Logger::instance().shutdown(); /* Shutdown logger */
+    wait(); /* Ensure thread completes before destructing app */
+
+    Logger::instance().stop(); /* Shutdown logger */
 }
 
 

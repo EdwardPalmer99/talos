@@ -11,6 +11,8 @@
 #include "App.hpp"
 #include "socket/FixClient.hpp"
 
+/* TODO: _ get rid of App class */
+/* TODO: - COMPLETELY REWRITE and base on the FixServer but simplify */
 /**
  * Simulates a front-office application for traders to book, amend, cancel trades
  */
@@ -21,6 +23,8 @@ public:
 
 protected:
     void appLoop() final;
+
+    /* TODO: - handle received messages here (i.e. from the OMEngine) --> Print Update for status to logs */
 
 private:
     FixClient _fixClient;

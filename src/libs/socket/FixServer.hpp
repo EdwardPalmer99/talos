@@ -23,6 +23,12 @@ protected:
     /* Send a FIX message to a client */
     void sendFixMessage(FixMessage message, SocketFD clientSocket);
 
+    /* Stamps tags for destination, sending time on sent messages */
+    virtual void enrichFixMessage(FixMessage &message);
+
+    /* Current UTC (GMT) time to millisecond precision */
+    std::string nowUTC() const;
+
 private:
     void handleMessage(Message clientMessage, SocketFD clientSocket) final;
 

@@ -12,18 +12,17 @@
 #include "socket/FixServer.hpp"
 
 
-class ExchangeFixServer : public FixServer
+class ExchangeServer : public FixServer
 {
 public:
-    ExchangeFixServer(uint16_t exchangePort) : FixServer(exchangePort) {}
+    ExchangeServer(uint16_t exchangePort) : FixServer(exchangePort) {}
 
 protected:
-    /* 35=8 */
+    /* 35=D,... */
     void handleFixMessage(FixMessage clientFix, SocketFD clientSocket) final;
 
-    /* 35=AR */
-    void sendTechAck(FixMessage message, SocketFD clientSocket);
+    bool isValidMsgType(const std::string &msgType) const;
 
-    /* 35=AE */
+    void sendPartialFill(FixMessage message, SocketFD clientSocket);
     void sendFill(FixMessage message, SocketFD clientSocket);
 };

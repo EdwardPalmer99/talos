@@ -21,6 +21,7 @@ enum FixTag
     MsgSeqNo = 34,
     MsgType = 35,
     OrderQty = 38,
+    OrdStatus = 39,
     Price = 44,
     SecurityID = 48,
     SendingTime = 52, /* Message transmission time UTC */

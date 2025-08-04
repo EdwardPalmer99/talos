@@ -30,6 +30,7 @@ Server::Server(Port port) : _port(port)
 Server::~Server()
 {
     stop();
+    wait(); /* Ensure logger has shutdown */
 }
 
 
@@ -39,6 +40,9 @@ void Server::start()
     {
         return;
     }
+
+    /* Startup logger */
+    Logger::instance().start();
 
     /* Create server socket */
     if ((_listeningSocket = socket(AF_INET, SOCK_STREAM, 0)) == (-1))
@@ -82,6 +86,8 @@ void Server::wait()
         _handleMessageLoopThread.join();
     if (_listenLoopThread.joinable())
         _listenLoopThread.join();
+
+    Logger::instance().wait();
 }
 
 
@@ -110,7 +116,8 @@ void Server::stop()
     /* Wipe map of ports to sockets */
     _portSocketMappings.clear();
 
-    Logger::instance().log("Server shutdown completed");
+    /* Shutdown logger */
+    Logger::instance().stop();
 }
 
 
@@ -335,7 +342,7 @@ void Server::senderLoop(ClientSession &session)
 
         long nBytesSent = send(session.clientSocket, message.c_str(), message.size(), 0);
 
-        if (nBytesSent == (-1) || nBytesSent < message.size())
+        if (nBytesSent == (-1) || nBytesSent < static_cast<long>(message.size()))
         {
             Logger::instance().log("Failed to send message (destination: " + std::to_string(session.clientSocket) + "): " + message, Logger::Error);
         }
