@@ -1,7 +1,7 @@
 cc_library(
     name="order_management_system_lib",
-    hdrs=glob(["*.hpp", "**/*.hpp"]),
-    srcs=glob(["*.cpp", "**/*.cpp"]),
+    hdrs=glob(["**/*.hpp"]),
+    srcs=glob(["**/*.cpp"]),
     includes=["."],
     visibility=["//visibility:public"]
 )
