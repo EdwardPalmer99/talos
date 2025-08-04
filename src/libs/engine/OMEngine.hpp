@@ -18,16 +18,13 @@
 /**
  * Order Management System Engine
  *
- * 1. Receive 35=8 message from client booking application
- * 2. Send 35=8 message downstream to exchange and to DB ==> New
- * 3. Receive 35=AR exchange trade capture report acknowledgement (update DB) ==> PendingFill
- * 4. Receive 35=AE exchange trade capture report (update DB) ==> Fill
- *
  * Simplified Diagram of message-flow:
  *
- * HighTouchApp --> OMEngine --> OMDatabase
- *                      |
- *                   Exchange
+ * HighTouchApp (35=D) <--> (35=8) OMEngine (35=D/35=8) --> OMDatabase
+ *                                  (35=D)
+ *                                    |
+ *                             (35=8;39=1/2/...)
+ *                                 Exchange
  */
 class OMEngine : public FixServer
 {
