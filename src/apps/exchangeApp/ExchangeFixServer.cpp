@@ -8,7 +8,7 @@
  */
 
 #include "ExchangeFixServer.hpp"
-#include "events/EventLogger.hpp"
+#include "logger/Logger.hpp"
 #include <chrono>
 
 

@@ -1,5 +1,5 @@
 /**
- * @file EventLogger.hpp
+ * @file Logger.hpp
  * @author Edward Palmer
  * @date 2025-07-22
  *
@@ -69,5 +69,3 @@ bool Logger::isLoggable(Level level) const
 {
     return (level >= _logLevel);
 }
-
-

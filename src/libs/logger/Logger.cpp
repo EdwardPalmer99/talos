@@ -1,5 +1,5 @@
 /**
- * @file EventLogger.cpp
+ * @file Logger.cpp
  * @author Edward Palmer
  * @date 2025-07-22
  *
@@ -7,7 +7,7 @@
  *
  */
 
-#include "EventLogger.hpp"
+#include "Logger.hpp"
 #include <chrono>
 #include <iomanip>
 #include <iostream>

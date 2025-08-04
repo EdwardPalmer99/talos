@@ -8,7 +8,7 @@
  */
 
 #include "OMEngine.hpp"
-#include "events/EventLogger.hpp"
+#include "logger/Logger.hpp"
 #include <functional>
 #include <iostream>
 #include <stdexcept>

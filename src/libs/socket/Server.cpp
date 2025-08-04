@@ -8,7 +8,7 @@
  */
 
 #include "Server.hpp"
-#include "events/EventLogger.hpp"
+#include "logger/Logger.hpp"
 #include <arpa/inet.h>
 #include <cstring>
 #include <functional>

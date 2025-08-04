@@ -8,7 +8,7 @@
  */
 
 #include "App.hpp"
-#include "events/EventLogger.hpp"
+#include "logger/Logger.hpp"
 
 
 App::App()
