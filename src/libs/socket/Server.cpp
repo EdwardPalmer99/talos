@@ -43,6 +43,7 @@ void Server::start()
 
     /* Startup logger */
     Logger::instance().start();
+    Logger::instance().info("Starting server on port " + std::to_string(port()));
 
     /* Create server socket */
     if ((_listeningSocket = socket(AF_INET, SOCK_STREAM, 0)) == (-1))
