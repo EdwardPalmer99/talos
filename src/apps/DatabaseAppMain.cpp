@@ -8,14 +8,29 @@
  */
 
 #include "database/DatabaseServer.hpp"
-#include "socket/ConnectionPorts.hpp"
+#include <iostream>
+#include <string>
 
 
-/* The OrderManager Database for storing OrderRecords */
-int main(void)
+int main(int argc, char *argv[])
 {
-    DatabaseServer database(ConnectionPorts::DatabasePort);
+    if (argc != 2)
+    {
+        std::cout << "Usage: " << argv[0] << " [PORT]" << std::endl;
+        std::cout << "Run a Talos OMDatabase on the specified port." << std::endl;
+        return 0;
+    }
+
+    int databasePort = std::atoi(argv[1]); /* Returns 0 on failure */
+    if (!databasePort)
+    {
+        std::cerr << argv[0] << ": invalid port " << argv[1] << std::endl;
+        return 1;
+    }
+
+    DatabaseServer database(static_cast<Server::Port>(databasePort));
     database.start();
     database.wait();
+
     return 0;
 }
