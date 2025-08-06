@@ -14,7 +14,7 @@
 #include <shared_mutex>
 #include <unordered_map>
 
-// TODO: - be smarter with a Queue when we receive messages
+
 /**
  * Order Management System Engine
  *
