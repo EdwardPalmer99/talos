@@ -18,6 +18,8 @@
 class Client
 {
 public:
+    using Port = uint16_t;
+
     Client();
     Client(const Client &) = delete;
     Client &operator=(const Client &) = delete;
@@ -25,10 +27,12 @@ public:
     virtual ~Client();
 
     /* Create a new connection to a server */
-    bool connectToServer(int serverPort);
+    bool connectToServer(Port serverPort);
 
     /* Thread-safe broadcast a message to all connections */
     bool broadcast(std::string message);
+
+    // TODO: - write a sender loop and retry in case we cannot connect
 
     /* Accessor for client's socket */
     [[nodiscard]] inline int clientSocket() const { return _clientSocket; }
