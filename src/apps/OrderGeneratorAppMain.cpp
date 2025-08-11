@@ -7,7 +7,7 @@
  *
  */
 
-#include "client/ClientApp.hpp"
+#include "client/OrderGenerator.hpp"
 #include <iostream>
 
 int main(int argc, char *argv[])
@@ -19,6 +19,9 @@ int main(int argc, char *argv[])
         return 0;
     }
 
+    /* TODO: - add additional options to connect to multiple engines, use broadcast to send messages to all */
+    /* TODO: - add option for # messages to be sent and interval */
+
     int enginePort = std::atoi(argv[1]);
     if (!enginePort)
     {
@@ -26,9 +29,10 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    ClientApp app(enginePort, 1000);
-    app.start();
-    app.wait();
-
+    OrderGenerator orderGeneratorClient;
+    orderGeneratorClient.start();
+    orderGeneratorClient.connectToServer(static_cast<Client::Port>(enginePort));
+    orderGeneratorClient.sendNewOrders(1000);
+    orderGeneratorClient.wait();
     return 0;
 }
