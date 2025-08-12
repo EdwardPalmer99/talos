@@ -40,6 +40,8 @@ protected:
     std::string nowUTC() const;
 
 private:
+    using Transport::sendMessage;
+
     void handleMessage(std::string message, ConnectionManager::SocketFD socket) final
     {
         Logger::instance().debug("Received FixMsg (source: " + std::to_string(socket) + "): " + message);
