@@ -27,3 +27,13 @@ cc_binary(
     ],
     visibility = ["//visibility:public"]
 )
+
+
+cc_binary(
+    name = "netadmin_app",
+    srcs = ["NetAdminAppMain.cpp"],
+    deps = [
+        "//src/libs:order_management_system_lib"
+    ],
+    visibility = ["//visibility:public"]
+)
