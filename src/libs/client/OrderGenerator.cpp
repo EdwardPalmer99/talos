@@ -10,23 +10,30 @@
 #include "OrderGenerator.hpp"
 #include "logger/Logger.hpp"
 #include "utilities/UUID.hpp"
+#include <chrono>
 #include <stdexcept>
 #include <string>
 #include <unistd.h>
 
 
-void OrderGenerator::sendNewOrders(std::size_t nOrders)
+void OrderGenerator::sendNewOrders(std::size_t nOrders, std::size_t delayMS)
 {
     auto sockets = _portSocketMappings.getSockets();
     if (sockets.empty())
     {
-        Logger::instance().error("No active sockets");
+        Logger::instance().error("No active sockets.");
+        return;
     }
 
     for (std::size_t iOrder = 0; iOrder < nOrders; ++iOrder)
     {
         auto newOrder = buildNewOrder();
-        
+
+        if (delayMS)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(delayMS));
+        }
+
         for (auto socket : sockets)
         {
             sendFixMessage(newOrder, socket);

@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
     OrderGenerator orderGeneratorClient;
     orderGeneratorClient.start();
     orderGeneratorClient.connectToServer(static_cast<Client::Port>(enginePort));
-    orderGeneratorClient.sendNewOrders(1000);
+    orderGeneratorClient.sendNewOrders(1000, 1000); // 1second between orders for testing
     orderGeneratorClient.wait();
     return 0;
 }

@@ -16,7 +16,7 @@
 class OrderGenerator : public FixClient
 {
 public:
-    void sendNewOrders(std::size_t nOrders);
+    void sendNewOrders(std::size_t nOrders, std::size_t delayMS = 0);
 
 protected:
     /* Note: Not handling any incoming messages currently */
