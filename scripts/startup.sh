@@ -9,8 +9,6 @@ EXCHANGE_PORT=1234
 DATABASE_PORT=2345
 ENGINE_PORT=3456
 
-echo "Commencing application startup..."
-
 LOGDIR="/var/log/talos"
 mkdir -p $LOGDIR
 
@@ -26,7 +24,4 @@ sleep 0.5
 bazel run //src/apps:engine_app -- --engine $ENGINE_PORT --exchange $EXCHANGE_PORT --database $DATABASE_PORT > "$LOGDIR/engine.log" &
 sleep 0.5
 
-# Start the dummy order generator client:
-bazel run //src/apps:order_generator_app $ENGINE_PORT > "$LOGDIR/ordergenerator.log" &
-
-echo "Completed application startup..."
+echo "Completed application startup."
