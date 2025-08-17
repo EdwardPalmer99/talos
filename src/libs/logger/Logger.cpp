@@ -113,6 +113,12 @@ void Logger::loggerLoop()
 
         if (!_running) /* Terminate */
         {
+            while (!_loggerQueue.empty()) /* Empty queue */
+            {
+                std::cout << _loggerQueue.front() << std::endl;
+                _loggerQueue.pop();
+            }
+
             std::cout << std::flush; /* Flush anything remaining to stdout */
             return;
         }
