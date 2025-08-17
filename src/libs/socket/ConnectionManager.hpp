@@ -10,6 +10,8 @@
 #pragma once
 #include <atomic>
 #include <condition_variable>
+#include <functional>
+#include <optional>
 #include <queue>
 #include <shared_mutex>
 #include <string>
@@ -102,16 +104,19 @@ protected:
     };
 
     void addClientSession(SocketFD clientSocket);
-    void closeClientSession(ClientSession &session);
-    void removeClientSession(SocketFD clientSocket);
-
     void closeSocket(SocketFD socket);
+
+    void markSessionAsInactive(ClientSession &session);
+    void markAllSessionsAsInactive();
+    void cleanupInactiveSessions();
 
     PortSocketMappings _portSocketMappings;
     std::atomic<bool> _active{false};
 
 private:
     using ClientMessage = std::pair<Message, SocketFD>;
+
+    void cleanupInactiveSessionsLoop();
 
     /* Receive from client. One per connection */
     void connectionLoop(ClientSession &clientSocket);
@@ -133,4 +138,7 @@ private:
 
     /* Server threads */
     std::thread _handleMessageLoopThread;
+
+    /* Cleanup inactive session */
+    std::thread _cleanupInactiveSessionsThread;
 };
