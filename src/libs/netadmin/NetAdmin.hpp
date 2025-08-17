@@ -21,7 +21,7 @@ public:
     NetAdmin();
 
     /* Send an admin command to all connections */
-    void sendAdminCommand(std::string command, std::size_t timeoutSeconds = 5);
+    void sendAdminCommand(std::string command, std::size_t timeoutSeconds = 2);
 
 protected:
     void handleFixMessage(FixMessage message, SocketFD socket) final;
