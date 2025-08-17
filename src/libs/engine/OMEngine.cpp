@@ -45,7 +45,6 @@ bool OMEngine::connectToDatabaseServer(Port databasePort)
 /* TODO: - Client trade booking application needs to stamp unique ClOrdID on messages */
 /* TODO: - OMEngine also needs to check for no response from Exchange and trigger an alert */
 /* TODO: - Add-in an OMRouter to enable RoundRobin routing to multiple OMEngines */
-
 void OMEngine::handleFixMessage(FixMessage fixMsg, SocketFD senderSocket)
 {
     std::string msgType = fixMsg.getValue(FixTag::MsgType);
@@ -56,48 +55,35 @@ void OMEngine::handleFixMessage(FixMessage fixMsg, SocketFD senderSocket)
     else if (msgType == "8")
         return handleExchangeFixMessage(std::move(fixMsg), senderSocket);
     else if (msgType == "QR")
-        return handleNetAdmin(std::move(fixMsg), senderSocket);
+        return handleNetAdminCmd(std::move(fixMsg), senderSocket);
 
     Logger::instance().log("Invalid message type [" + msgType + "]", Logger::Error);
     /* TODO: - handle; send alert to OMAlert to notify humans */
 }
 
 
-void OMEngine::handleNetAdmin(FixMessage fixMsg, SocketFD senderSocket)
+void OMEngine::onRegisterNetAdminCmds()
 {
-    std::string adminCmd = fixMsg.getValue(FixTag::AdminCommand);
-    if (adminCmd.empty())
+    FixServer::onRegisterNetAdminCmds();
+
+    registerNetAdminCmd("sockets.count", [this](SocketFD senderSocket)
     {
-        Logger::instance().error("Missing admin command on FixMsg => ignoring.");
-        return; /* TODO: - return a list of supported commands */
-    }
+        std::ostringstream response;
+        response << "Socket count: " << _portSocketMappings.getSockets().size() << std::endl;
+        sendNetAdminResponse(response.str(), senderSocket);
+    });
 
-    /* Match against supported commands, i.e. cancel_tr, correct_tr, messagesProcessed, ... */
-    // TODO - convert into an enum
-
-    if (adminCmd == "list.sockets")
+    registerNetAdminCmd("sockets.list", [this](SocketFD senderSocket)
     {
-        std::ostringstream os;
-
-        /* Delegate to method */
-        auto activeSockets = _portSocketMappings.getSockets();
-
-        os << "# active sockets: " << activeSockets.size() << std::endl;
-
-        for (auto socket : activeSockets)
+        std::ostringstream response;
+        for (auto socket : _portSocketMappings.getSockets())
         {
-            os << "- socket " << socket << std::endl;
+            response << "socket " << socket << " <--> port " << _portSocketMappings.getPort(socket) << std::endl;
         }
+        sendNetAdminResponse(response.str(), senderSocket);
+    });
 
-        /* Construct response */
-        FixMessage msg;
-        msg.setTag(FixTag::MsgType, "QR");
-        msg.setTag(FixTag::AdminResponse, os.str());
-
-        sendFixMessage(msg, senderSocket);
-    }
-
-    Logger::instance().error("Failed to handle AdminCmd: " + adminCmd);
+    /* TODO: - register more commands here: cancel, correct, .... */
 }
 
 

@@ -53,8 +53,8 @@ protected:
     /* 39=2, 150=2 */
     void handleExchangeFill(FixMessage fixMsg, SocketFD senderSocket);
 
-    /* 35=QR */
-    void handleNetAdmin(FixMessage fixMsg, SocketFD senderSocket);
+    /* Register our own netadmin commands */
+    void onRegisterNetAdminCmds() override;
 
     /* TODO: - handle other exchange states and client cancellation/corrections */
 

@@ -11,6 +11,14 @@
 #include "logger/Logger.hpp"
 
 
+void DatabaseServer::onRegisterNetAdminCmds()
+{
+    FixServer::onRegisterNetAdminCmds();
+
+    /* TODO: - add additional commands here */
+}
+
+
 void DatabaseServer::handleFixMessage(FixMessage fixMsg, SocketFD clientSocket)
 {
     std::string msgType(fixMsg.getValue(FixTag::MsgType));
@@ -25,7 +33,8 @@ void DatabaseServer::handleFixMessage(FixMessage fixMsg, SocketFD clientSocket)
     }
     else if (msgType == "QR") /* Query Record (custom type) for NetAdmin: send back FIX with details */
     {
-        handleDatabaseQuery(std::move(fixMsg), clientSocket);
+        // TODO: - rewrite. We need to be able to add additional arguments to lookup a specific order
+        handleNetAdminCmd(std::move(fixMsg), clientSocket);
     }
     else
     {

@@ -16,22 +16,20 @@ void ExchangeServer::handleFixMessage(FixMessage clientFix, SocketFD clientSocke
 {
     std::string msgType(clientFix.getValue(FixTag::MsgType));
 
-    if (!isValidMsgType(msgType))
+    if (msgType == "QR")
+    {
+        handleNetAdminCmd(std::move(clientFix), clientSocket);
+    }
+    else if (msgType == "D") /* TODO: extend to corrections/cancellations */
+    {
+        sendPartialFill(clientFix, clientSocket);
+        sendFill(clientFix, clientSocket);
+    }
+    else
     {
         Logger::instance().error("Received unsupported msgType [" + msgType + "] => dropping");
-        return;
     }
-
-    sendPartialFill(clientFix, clientSocket);
-    sendFill(clientFix, clientSocket);
 }
-
-
-bool ExchangeServer::isValidMsgType(const std::string &msgType) const
-{
-    return (msgType == "D"); /* TODO: - extend to corrections/cancellations */
-}
-
 
 void ExchangeServer::sendPartialFill(FixMessage clientFix, SocketFD clientSocket)
 {

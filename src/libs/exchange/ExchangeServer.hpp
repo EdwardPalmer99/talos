@@ -21,8 +21,6 @@ protected:
     /* 35=D,... */
     void handleFixMessage(FixMessage clientFix, SocketFD clientSocket) final;
 
-    bool isValidMsgType(const std::string &msgType) const;
-
     void sendPartialFill(FixMessage message, SocketFD clientSocket);
     void sendFill(FixMessage message, SocketFD clientSocket);
 };

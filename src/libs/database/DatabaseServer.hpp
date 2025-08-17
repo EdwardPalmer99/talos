@@ -48,6 +48,8 @@ protected:
     /* 35=8 message */
     void updateOrderRecord(const FixMessage message);
 
+    void onRegisterNetAdminCmds() override;
+
 private:
     mutable std::shared_mutex _orderRecordMutex;
     std::unordered_map<std::string, std::unique_ptr<OrderRecord>> _orderRecords;
