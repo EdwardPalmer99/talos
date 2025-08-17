@@ -53,14 +53,13 @@ protected:
     /* 39=2, 150=2 */
     void handleExchangeFill(FixMessage fixMsg, SocketFD senderSocket);
 
-    /* Register our own netadmin commands */
-    void onRegisterNetAdminCmds() override;
-
     /* TODO: - handle other exchange states and client cancellation/corrections */
 
-private:
-    void handleFixMessage(FixMessage fixMsg, SocketFD senderSocket) final;
+    /* Hooks */
+    void onRegisterMsgTypes() override;
+    void onRegisterNetAdminCmds() override;
 
+private:
     /* Store the DB and Exchange connection sockets here for sending messages to right destination */
     SocketFD _exchangeSocket{-1};
     SocketFD _databaseSocket{-1};

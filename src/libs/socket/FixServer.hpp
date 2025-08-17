@@ -20,27 +20,33 @@
 class FixServer : public FixEndpoint<Server>
 {
 protected:
+    using NetAdminCmdHandler = std::function<void(SocketFD)>;
+    using MsgTypeHandler = std::function<void(FixMessage, SocketFD)>;
+
     FixServer(Port port) : FixEndpoint<Server>(port) {}
 
-    using NetAdminCmdHandler = std::function<void(SocketFD)>;
-
-    bool isNetAdminFixMessage(const FixMessage &fixMsg) const;
-
-    void registerNetAdminCmd(std::string cmd, NetAdminCmdHandler handler);
+    void registerMsgTypeHandler(std::string msgType, MsgTypeHandler handler);
+    void registerNetAdminCmdHandler(std::string cmd, NetAdminCmdHandler handler);
 
     void sendNetAdminResponse(std::string response, SocketFD netAdminSocket);
 
-    /* Hook to override to add additional netadmin commands */
+    /* Hooks */
+    virtual void onRegisterMsgTypes();
     virtual void onRegisterNetAdminCmds();
 
-    /* Add netadmin hook into onStartup() */
-    virtual void onStartup() override;
-
-    void handleNetAdminCmd(FixMessage fixMsg, SocketFD netAdminSocket);
-
 private:
-    using NetAdminCmdMap = std::unordered_map<std::string, NetAdminCmdHandler>;
+    /* Adds hooks */
+    void onStartup() final;
 
-    NetAdminCmdMap _netadminCmds;
+    /* Maps message to registered handler */
+    void handleFixMessage(FixMessage message, SocketFD socket) final;
+
+    using NetAdminCmdMap = std::unordered_map<std::string, NetAdminCmdHandler>;
+    using MsgTypeHandlerMap = std::unordered_map<std::string, MsgTypeHandler>;
+
+    NetAdminCmdMap _handlerForNetAdminCmd;
     std::shared_mutex _netadminCmdsMutex;
+
+    MsgTypeHandlerMap _handlerForMsgType;
+    std::shared_mutex _handlerForMsgTypeMutex;
 };

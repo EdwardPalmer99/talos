@@ -14,14 +14,50 @@
 void FixServer::onStartup()
 {
     FixEndpoint<Server>::onStartup();
+    onRegisterMsgTypes();
     onRegisterNetAdminCmds();
+}
+
+
+void FixServer::onRegisterMsgTypes()
+{
+    /* TODO: - other servers should override this to add their own registered types */
+    auto handler = [this](FixMessage fixMsg, SocketFD netAdminSocket) -> void
+    {
+        std::string adminCmd = fixMsg.getValue(FixTag::AdminCommand);
+
+        NetAdminCmdMap::iterator iter;
+
+        {
+            std::shared_lock guard(_netadminCmdsMutex);
+            iter = _handlerForNetAdminCmd.find(adminCmd);
+            if (iter == _handlerForNetAdminCmd.end())
+            {
+                Logger::instance().error("Ignoring unregistered command: " + adminCmd);
+                return;
+            }
+        }
+
+        iter->second(netAdminSocket);
+    };
+
+    registerMsgTypeHandler("QR", std::move(handler));
+}
+
+
+void FixServer::registerMsgTypeHandler(std::string msgType, MsgTypeHandler handler)
+{
+    Logger::instance().debug("Registering MsgType " + msgType);
+
+    std::unique_lock guard(_handlerForMsgTypeMutex);
+    _handlerForMsgType[msgType] = std::move(handler);
 }
 
 
 void FixServer::onRegisterNetAdminCmds()
 {
     /* Shutsdown server */
-    registerNetAdminCmd("shutdown", [this](SocketFD socket)
+    registerNetAdminCmdHandler("shutdown", [this](SocketFD socket)
     {
         sendNetAdminResponse("Commencing shutdown", socket);
         stop();
@@ -29,13 +65,13 @@ void FixServer::onRegisterNetAdminCmds()
     });
 
     /* Lists available commands */
-    registerNetAdminCmd("list", [this](SocketFD socket)
+    registerNetAdminCmdHandler("list", [this](SocketFD socket)
     {
         std::ostringstream responseOS;
 
         {
             std::shared_lock guard(_netadminCmdsMutex);
-            for (auto iter : _netadminCmds)
+            for (auto iter : _handlerForNetAdminCmd)
             {
                 responseOS << iter.first << '\n'; /* TODO: - add usage */
             }
@@ -48,39 +84,12 @@ void FixServer::onRegisterNetAdminCmds()
 }
 
 
-void FixServer::registerNetAdminCmd(std::string name, NetAdminCmdHandler handler)
+void FixServer::registerNetAdminCmdHandler(std::string cmd, NetAdminCmdHandler handler)
 {
-    Logger::instance().debug("Registering netadmin command with name: " + name);
+    Logger::instance().debug("Registering netadmin command with cmd: " + cmd);
 
     std::unique_lock guard(_netadminCmdsMutex);
-    _netadminCmds[name] = std::move(handler);
-}
-
-
-void FixServer::handleNetAdminCmd(FixMessage fixMsg, SocketFD netAdminSocket)
-{
-    if (!isNetAdminFixMessage(fixMsg))
-    {
-        Logger::instance().error("Received Fix is not of type NetAdmin => Ignoring.");
-        return;
-    }
-
-    std::string adminCmd = fixMsg.getValue(FixTag::AdminCommand);
-
-    NetAdminCmdMap::iterator iter;
-
-    {
-        std::shared_lock guard(_netadminCmdsMutex);
-        iter = _netadminCmds.find(adminCmd);
-        if (iter == _netadminCmds.end())
-        {
-            Logger::instance().error("Invalid admin command: " + adminCmd);
-            return;
-        }
-    }
-
-    Logger::instance().info("Calling netAdminCmd: " + adminCmd);
-    iter->second(netAdminSocket);
+    _handlerForNetAdminCmd[cmd] = std::move(handler);
 }
 
 
@@ -99,8 +108,21 @@ void FixServer::sendNetAdminResponse(std::string response, SocketFD netAdminSock
 }
 
 
-bool FixServer::isNetAdminFixMessage(const FixMessage &fixMsg) const
+void FixServer::handleFixMessage(FixMessage message, SocketFD socket)
 {
-    /* TODO: - stick into an enum for different message types */
-    return (fixMsg.getValue(FixTag::MsgType) == "QR" && fixMsg.hasTag(FixTag::AdminCommand));
+    std::string msgType(message.getValue(FixTag::MsgType));
+
+    MsgTypeHandlerMap::iterator iter;
+
+    {
+        std::shared_lock guard(_handlerForMsgTypeMutex);
+        iter = _handlerForMsgType.find(msgType);
+        if (iter == _handlerForMsgType.end())
+        {
+            Logger::instance().error("No handler registered for msgType " + msgType);
+            return;
+        }
+    }
+
+    iter->second(std::move(message), socket); /* Call */
 }

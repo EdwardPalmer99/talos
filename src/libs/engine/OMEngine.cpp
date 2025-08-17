@@ -15,6 +15,42 @@
 #include <string>
 
 
+void OMEngine::onRegisterMsgTypes()
+{
+    FixServer::onRegisterMsgTypes();
+
+    /* TODO: - use an enum rather than a string for msgType */
+    /* TODO: - add a callback on a timer if we don't receive a response from the exchange within T milliseconds => Error */
+    registerMsgTypeHandler("D", std::bind(&OMEngine::handleClientFixMessage, this, std::placeholders::_1, std::placeholders::_2));
+    registerMsgTypeHandler("8", std::bind(&OMEngine::handleExchangeFixMessage, this, std::placeholders::_1, std::placeholders::_2));
+}
+
+
+void OMEngine::onRegisterNetAdminCmds()
+{
+    FixServer::onRegisterNetAdminCmds();
+
+    registerNetAdminCmdHandler("sockets.count", [this](SocketFD senderSocket)
+    {
+        std::ostringstream response;
+        response << "Socket count: " << _portSocketMappings.getSockets().size() << std::endl;
+        sendNetAdminResponse(response.str(), senderSocket);
+    });
+
+    registerNetAdminCmdHandler("sockets.list", [this](SocketFD senderSocket)
+    {
+        std::ostringstream response;
+        for (auto socket : _portSocketMappings.getSockets())
+        {
+            response << "socket " << socket << " <--> port " << _portSocketMappings.getPort(socket) << std::endl;
+        }
+        sendNetAdminResponse(response.str(), senderSocket);
+    });
+
+    /* TODO: - register more commands here: cancel, correct, .... */
+}
+
+
 /* TODO: - add a retry connection loop if we fail to connect the first couple of times (try every few seconds) */
 
 bool OMEngine::connectToExchangeServer(Port exchangePort)
@@ -38,52 +74,6 @@ bool OMEngine::connectToDatabaseServer(Port databasePort)
     }
 
     return ok;
-}
-
-
-/* TODO: - add alerting manager on separate instance */
-/* TODO: - Client trade booking application needs to stamp unique ClOrdID on messages */
-/* TODO: - OMEngine also needs to check for no response from Exchange and trigger an alert */
-/* TODO: - Add-in an OMRouter to enable RoundRobin routing to multiple OMEngines */
-void OMEngine::handleFixMessage(FixMessage fixMsg, SocketFD senderSocket)
-{
-    std::string msgType = fixMsg.getValue(FixTag::MsgType);
-
-    /* TODO: - write special enum to convert string to enum */
-    if (msgType == "D")
-        return handleClientFixMessage(std::move(fixMsg), senderSocket);
-    else if (msgType == "8")
-        return handleExchangeFixMessage(std::move(fixMsg), senderSocket);
-    else if (msgType == "QR")
-        return handleNetAdminCmd(std::move(fixMsg), senderSocket);
-
-    Logger::instance().log("Invalid message type [" + msgType + "]", Logger::Error);
-    /* TODO: - handle; send alert to OMAlert to notify humans */
-}
-
-
-void OMEngine::onRegisterNetAdminCmds()
-{
-    FixServer::onRegisterNetAdminCmds();
-
-    registerNetAdminCmd("sockets.count", [this](SocketFD senderSocket)
-    {
-        std::ostringstream response;
-        response << "Socket count: " << _portSocketMappings.getSockets().size() << std::endl;
-        sendNetAdminResponse(response.str(), senderSocket);
-    });
-
-    registerNetAdminCmd("sockets.list", [this](SocketFD senderSocket)
-    {
-        std::ostringstream response;
-        for (auto socket : _portSocketMappings.getSockets())
-        {
-            response << "socket " << socket << " <--> port " << _portSocketMappings.getPort(socket) << std::endl;
-        }
-        sendNetAdminResponse(response.str(), senderSocket);
-    });
-
-    /* TODO: - register more commands here: cancel, correct, .... */
 }
 
 

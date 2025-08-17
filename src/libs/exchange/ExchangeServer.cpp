@@ -11,47 +11,41 @@
 #include "logger/Logger.hpp"
 #include <chrono>
 
-
-void ExchangeServer::handleFixMessage(FixMessage clientFix, SocketFD clientSocket)
+void ExchangeServer::onRegisterMsgTypes()
 {
-    std::string msgType(clientFix.getValue(FixTag::MsgType));
+    FixServer::onRegisterMsgTypes();
 
-    if (msgType == "QR")
+    auto handler = [this](FixMessage message, SocketFD socket) -> void
     {
-        handleNetAdminCmd(std::move(clientFix), clientSocket);
-    }
-    else if (msgType == "D") /* TODO: extend to corrections/cancellations */
-    {
-        sendPartialFill(clientFix, clientSocket);
-        sendFill(clientFix, clientSocket);
-    }
-    else
-    {
-        Logger::instance().error("Received unsupported msgType [" + msgType + "] => dropping");
-    }
+        sendFixMessage(buildPartialFill(message), socket);
+        sendFixMessage(buildFill(message), socket);
+    };
+
+    registerMsgTypeHandler("D", handler); /* TODO: - extend for corrections/cancellations (different types) */
 }
 
-void ExchangeServer::sendPartialFill(FixMessage clientFix, SocketFD clientSocket)
+
+FixMessage ExchangeServer::buildPartialFill(const FixMessage &clientFix) const
 {
     /* Construct 35=AR message */
-    FixMessage ackMessage = std::move(clientFix);
+    FixMessage ackMessage = clientFix;
     ackMessage.setTag(FixTag::MsgType, "8");
     ackMessage.setTag(FixTag::ExecType, "1");
     ackMessage.setTag(FixTag::OrdStatus, "1");
     /* TODO: - set remaining tags */
 
-    sendFixMessage(std::move(ackMessage), clientSocket);
+    return ackMessage;
 }
 
 
-void ExchangeServer::sendFill(FixMessage clientFix, SocketFD clientSocket)
+FixMessage ExchangeServer::buildFill(const FixMessage &clientFix) const
 {
     /* Construct 35=AE message */
-    FixMessage fillMessage = std::move(clientFix);
+    FixMessage fillMessage = clientFix;
     fillMessage.setTag(FixTag::MsgType, "8");
     fillMessage.setTag(FixTag::ExecType, "2"); /* Fill */
     fillMessage.setTag(FixTag::OrdStatus, "2");
     /* TODO: - set remaining tags */
 
-    sendFixMessage(std::move(fillMessage), clientSocket);
+    return fillMessage;
 }
