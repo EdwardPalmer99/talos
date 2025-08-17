@@ -18,11 +18,11 @@ public:
     ExchangeServer(uint16_t exchangePort) : FixServer(exchangePort) {}
 
 protected:
-    /* 35=D,... */
-    void handleFixMessage(FixMessage clientFix, SocketFD clientSocket) final;
+    /* Hooks */
+    void onRegisterMsgTypes() override;
 
-    bool isValidMsgType(const std::string &msgType) const;
-
-    void sendPartialFill(FixMessage message, SocketFD clientSocket);
-    void sendFill(FixMessage message, SocketFD clientSocket);
+private:
+    /* Message builders */
+    FixMessage buildPartialFill(const FixMessage &message) const;
+    FixMessage buildFill(const FixMessage &message) const;
 };

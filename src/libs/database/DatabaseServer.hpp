@@ -34,19 +34,17 @@ protected:
         std::string lastUpdateTime;
     };
 
-    void handleFixMessage(FixMessage message, SocketFD clientSocket) final;
-
-    /* Sends-back FIX with order record details */
-    void handleDatabaseQuery(FixMessage fixMsg, SocketFD netAdminSocket);
-
     /* Returns pointer to OrderRecord or nullptr if not found */
     OrderRecord *lookupOrderRecord(std::string originalClOrdID);
 
     /* 35=D message */
-    void createOrderRecord(const FixMessage message);
+    void handleNewOrder(FixMessage message, SocketFD socket);
 
     /* 35=8 message */
-    void updateOrderRecord(const FixMessage message);
+    void handleExecutionReport(FixMessage message, SocketFD socket);
+
+    /* Hooks */
+    void onRegisterMsgTypes() override;
 
 private:
     mutable std::shared_mutex _orderRecordMutex;

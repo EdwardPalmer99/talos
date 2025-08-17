@@ -1,57 +1,128 @@
 /**
  * @file FixServer.cpp
  * @author Edward Palmer
- * @date 2025-07-27
+ * @date 2025-08-17
  *
  * @copyright Copyright (c) 2025
  *
  */
 
-#include "FixServer.hpp"
-#include "logger/Logger.hpp"
-#include <iomanip>
+#include "socket/FixServer.hpp"
+#include <sstream>
 
-FixServer::FixServer(Port serverPort) : Server(serverPort)
+
+void FixServer::onStartup()
 {
+    FixEndpoint<Server>::onStartup();
+    onRegisterMsgTypes();
+    onRegisterNetAdminCmds();
 }
 
 
-void FixServer::handleMessage(Message clientMessage, SocketFD clientSocket)
+void FixServer::onRegisterMsgTypes()
 {
-    /* Construct FIX message and pass down to handleFixMessage() */
-    Logger::instance().log("Received FixMsg (source: " + std::to_string(clientSocket) + "): " + clientMessage);
-    handleFixMessage(FixMessage(std::move(clientMessage)), clientSocket);
+    /* TODO: - other servers should override this to add their own registered types */
+    auto handler = [this](FixMessage fixMsg, SocketFD netAdminSocket) -> void
+    {
+        std::string adminCmd = fixMsg.getValue(FixTag::AdminCommand);
+
+        NetAdminCmdMap::iterator iter;
+
+        {
+            std::shared_lock guard(_netadminCmdsMutex);
+            iter = _handlerForNetAdminCmd.find(adminCmd);
+            if (iter == _handlerForNetAdminCmd.end())
+            {
+                Logger::instance().error("Ignoring unregistered command: " + adminCmd);
+                return;
+            }
+        }
+
+        iter->second(netAdminSocket);
+    };
+
+    registerMsgTypeHandler("QR", std::move(handler));
 }
 
 
-void FixServer::sendFixMessage(FixMessage message, SocketFD clientSocket)
+void FixServer::registerMsgTypeHandler(std::string msgType, MsgTypeHandler handler)
 {
-    enrichFixMessage(message);
+    Logger::instance().debug("Registering MsgType " + msgType);
 
-    Logger::instance().log("Sent FixMsg (destination: " + std::to_string(clientSocket) + "): " + message.toString());
-    sendMessage(message.toString(), clientSocket);
+    std::unique_lock guard(_handlerForMsgTypeMutex);
+    _handlerForMsgType[msgType] = std::move(handler);
 }
 
 
-void FixServer::enrichFixMessage(FixMessage &fixMsg)
+void FixServer::onRegisterNetAdminCmds()
 {
-    /* TODO: - update the MsgSeqNo for that connection */
-    fixMsg.setTag(FixTag::SendingTime, nowUTC());
-    fixMsg.setTag(FixTag::SenderSubID, std::to_string(port())); /* TODO: - add option to override this */
+    /* Shutsdown server */
+    registerNetAdminCmdHandler("shutdown", [this](SocketFD socket)
+    {
+        sendNetAdminResponse("Commencing shutdown", socket);
+        stop();
+        wait();
+    });
+
+    /* Lists available commands */
+    registerNetAdminCmdHandler("list", [this](SocketFD socket)
+    {
+        std::ostringstream responseOS;
+
+        {
+            std::shared_lock guard(_netadminCmdsMutex);
+            for (auto iter : _handlerForNetAdminCmd)
+            {
+                responseOS << iter.first << '\n'; /* TODO: - add usage */
+            }
+        }
+
+        sendNetAdminResponse(responseOS.str(), socket);
+    });
+
+    /* TODO: - add additional commands to log statistics, performance, etc */
 }
 
 
-std::string FixServer::nowUTC() const
+void FixServer::registerNetAdminCmdHandler(std::string cmd, NetAdminCmdHandler handler)
 {
-    auto now = std::chrono::system_clock::now();
-    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count() % 1000;
+    Logger::instance().debug("Registering netadmin command with cmd: " + cmd);
 
-    std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
+    std::unique_lock guard(_netadminCmdsMutex);
+    _handlerForNetAdminCmd[cmd] = std::move(handler);
+}
 
-    std::ostringstream os;
 
-    struct tm currentGMTime; /* gmtime_r is a thread-safe verison */
-    os << std::put_time(gmtime_r(&currentTime, &currentGMTime), "%Y%m%d-%H:%M:%S") << "." << std::setw(3) << std::setfill('0') << ms;
+void FixServer::sendNetAdminResponse(std::string response, SocketFD netAdminSocket)
+{
+    if (response.empty() || netAdminSocket == (-1))
+    {
+        Logger::instance().error("Invalid response/destination => Ignoring.");
+    }
 
-    return os.str();
+    FixMessage responseFix;
+    responseFix.setTag(FixTag::MsgType, "QR");
+    responseFix.setTag(FixTag::AdminResponse, std::move(response));
+
+    sendFixMessage(std::move(responseFix), netAdminSocket);
+}
+
+
+void FixServer::handleFixMessage(FixMessage message, SocketFD socket)
+{
+    std::string msgType(message.getValue(FixTag::MsgType));
+
+    MsgTypeHandlerMap::iterator iter;
+
+    {
+        std::shared_lock guard(_handlerForMsgTypeMutex);
+        iter = _handlerForMsgType.find(msgType);
+        if (iter == _handlerForMsgType.end())
+        {
+            Logger::instance().error("No handler registered for msgType " + msgType);
+            return;
+        }
+    }
+
+    iter->second(std::move(message), socket); /* Call */
 }

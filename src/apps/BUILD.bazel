@@ -1,6 +1,6 @@
 cc_binary(
-    name = "client_app",
-    srcs = ["ClientAppMain.cpp"],
+    name = "order_generator_app",
+    srcs = ["OrderGeneratorAppMain.cpp"],
     deps = ["//src/libs:order_management_system_lib"],
     visibility = ["//visibility:public"]
 )
@@ -22,6 +22,16 @@ cc_binary(
 cc_binary(
     name = "exchange_app",
     srcs = ["ExchangeAppMain.cpp"],
+    deps = [
+        "//src/libs:order_management_system_lib"
+    ],
+    visibility = ["//visibility:public"]
+)
+
+
+cc_binary(
+    name = "netadmin_app",
+    srcs = ["NetAdminAppMain.cpp"],
     deps = [
         "//src/libs:order_management_system_lib"
     ],

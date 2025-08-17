@@ -31,6 +31,8 @@ enum FixTag
     SenderSubID = 50,  /* Specific message originator (trader, desk, ...)*/
 
     /* User tags */
+    AdminCommand = 9001,
+    AdminResponse = 9002,
     Trace = 10000,
 
 };

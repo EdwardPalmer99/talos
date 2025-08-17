@@ -8,29 +8,45 @@
  */
 
 #pragma once
+#include "FixEndpoint.hpp"
 #include "Server.hpp"
-#include "fix/FixMessage.hpp"
+#include <fix/FixMessage.hpp>
+#include <functional>
+#include <shared_mutex>
+#include <string>
+#include <unordered_map>
 
-class FixServer : public Server
+
+class FixServer : public FixEndpoint<Server>
 {
-public:
-    FixServer(Port serverPort);
-
 protected:
-    /* To be implemented. What to do when we receive a client Fix */
-    virtual void handleFixMessage(FixMessage message, SocketFD clientSocket) = 0;
+    using NetAdminCmdHandler = std::function<void(SocketFD)>;
+    using MsgTypeHandler = std::function<void(FixMessage, SocketFD)>;
 
-    /* Send a FIX message to a client */
-    void sendFixMessage(FixMessage message, SocketFD clientSocket);
+    FixServer(Port port) : FixEndpoint<Server>(port) {}
 
-    /* Stamps tags for destination, sending time on sent messages */
-    virtual void enrichFixMessage(FixMessage &message);
+    void registerMsgTypeHandler(std::string msgType, MsgTypeHandler handler);
+    void registerNetAdminCmdHandler(std::string cmd, NetAdminCmdHandler handler);
 
-    /* Current UTC (GMT) time to millisecond precision */
-    std::string nowUTC() const;
+    void sendNetAdminResponse(std::string response, SocketFD netAdminSocket);
+
+    /* Hooks */
+    virtual void onRegisterMsgTypes();
+    virtual void onRegisterNetAdminCmds();
 
 private:
-    void handleMessage(Message clientMessage, SocketFD clientSocket) final;
+    /* Adds hooks */
+    void onStartup() final;
 
-    using Server::sendMessage; /* Make private */
+    /* Maps message to registered handler */
+    void handleFixMessage(FixMessage message, SocketFD socket) final;
+
+    using NetAdminCmdMap = std::unordered_map<std::string, NetAdminCmdHandler>;
+    using MsgTypeHandlerMap = std::unordered_map<std::string, MsgTypeHandler>;
+
+    NetAdminCmdMap _handlerForNetAdminCmd;
+    std::shared_mutex _netadminCmdsMutex;
+
+    MsgTypeHandlerMap _handlerForMsgType;
+    std::shared_mutex _handlerForMsgTypeMutex;
 };

@@ -9,61 +9,22 @@
 
 #include "DatabaseServer.hpp"
 #include "logger/Logger.hpp"
+#include <functional>
 
 
-void DatabaseServer::handleFixMessage(FixMessage fixMsg, SocketFD clientSocket)
+void DatabaseServer::onRegisterMsgTypes()
 {
-    std::string msgType(fixMsg.getValue(FixTag::MsgType));
+    FixServer::onRegisterMsgTypes();
 
-    if (msgType == "D") /* New */
-    {
-        createOrderRecord(std::move(fixMsg));
-    }
-    else if (msgType == "8") /* Execution report */
-    {
-        updateOrderRecord(std::move(fixMsg));
-    }
-    else if (msgType == "QR") /* Query Record (custom type) for NetAdmin: send back FIX with details */
-    {
-        handleDatabaseQuery(std::move(fixMsg), clientSocket);
-    }
-    else
-    {
-        Logger::instance().error("Received FixMsg with invalid MsgType " + msgType);
-    }
+    /* New */
+    registerMsgTypeHandler("D", std::bind(&DatabaseServer::handleNewOrder, this, std::placeholders::_1, std::placeholders::_2));
+
+    /* Execution report */
+    registerMsgTypeHandler("8", std::bind(&DatabaseServer::handleExecutionReport, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 
-void DatabaseServer::handleDatabaseQuery(FixMessage queryFixMsg, SocketFD netAdminSocket)
-{
-    std::string clOrdID(queryFixMsg.getValue(FixTag::ClOrdID));
-
-    FixMessage responseFix;
-    responseFix.setTag(FixTag::MsgType, "QR");
-    responseFix.setTag(FixTag::ClOrdID, clOrdID);
-
-    OrderRecord *orderRecord = lookupOrderRecord(clOrdID);
-    if (!orderRecord)
-    {
-        Logger::instance().error("ClOrdID " + clOrdID + " not found in map");
-        /* No details */
-    }
-    else
-    {
-        responseFix.setTag(FixTag::OrdStatus, orderRecord->orderStatus);
-        responseFix.setTag(FixTag::Side, orderRecord->side);
-        responseFix.setTag(FixTag::Currency, orderRecord->currency);
-        responseFix.setTag(FixTag::OrderQty, orderRecord->orderQty);
-        responseFix.setTag(FixTag::Price, orderRecord->price);
-        responseFix.setTag(FixTag::ExecType, orderRecord->execType);
-        /* TODO: - may need to create custom tags for lastUpdateTime, creationTime */
-    }
-
-    sendFixMessage(std::move(responseFix), netAdminSocket);
-}
-
-
-void DatabaseServer::createOrderRecord(FixMessage fixMsg)
+void DatabaseServer::handleNewOrder(FixMessage fixMsg, SocketFD)
 {
     std::string clOrdID(fixMsg.getValue(FixTag::ClOrdID));
 
@@ -91,7 +52,7 @@ void DatabaseServer::createOrderRecord(FixMessage fixMsg)
 }
 
 
-void DatabaseServer::updateOrderRecord(FixMessage fixMsg)
+void DatabaseServer::handleExecutionReport(FixMessage fixMsg, SocketFD)
 {
     std::string clOrdID(fixMsg.getValue(FixTag::ClOrdID));
 
@@ -110,6 +71,35 @@ void DatabaseServer::updateOrderRecord(FixMessage fixMsg)
     orderRecord->orderStatus = newOrdStatus;
     orderRecord->lastUpdateTime = nowUTC();
 }
+
+
+// void DatabaseServer::handleDatabaseQuery(FixMessage queryFixMsg, SocketFD netAdminSocket)
+// {
+//     std::string clOrdID(queryFixMsg.getValue(FixTag::ClOrdID));
+
+//     FixMessage responseFix;
+//     responseFix.setTag(FixTag::MsgType, "QR");
+//     responseFix.setTag(FixTag::ClOrdID, clOrdID);
+
+//     OrderRecord *orderRecord = lookupOrderRecord(clOrdID);
+//     if (!orderRecord)
+//     {
+//         Logger::instance().error("ClOrdID " + clOrdID + " not found in map");
+//         /* No details */
+//     }
+//     else
+//     {
+//         responseFix.setTag(FixTag::OrdStatus, orderRecord->orderStatus);
+//         responseFix.setTag(FixTag::Side, orderRecord->side);
+//         responseFix.setTag(FixTag::Currency, orderRecord->currency);
+//         responseFix.setTag(FixTag::OrderQty, orderRecord->orderQty);
+//         responseFix.setTag(FixTag::Price, orderRecord->price);
+//         responseFix.setTag(FixTag::ExecType, orderRecord->execType);
+//         /* TODO: - may need to create custom tags for lastUpdateTime, creationTime */
+//     }
+
+//     sendFixMessage(std::move(responseFix), netAdminSocket);
+// }
 
 
 DatabaseServer::OrderRecord *DatabaseServer::lookupOrderRecord(std::string originalClOrdID)
