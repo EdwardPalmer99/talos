@@ -77,7 +77,7 @@ void Server::onWait()
 
 void Server::listenLoop()
 {
-    Logger::instance().log("Starting listen loop on socket " + std::to_string(_listeningSocket));
+    Logger::instance().info("Starting listening loop (socket: " + std::to_string(_listeningSocket) + ")");
 
     /* Reference: https://man7.org/linux/man-pages/man2/poll.2.html */
     struct pollfd fds;
@@ -95,7 +95,7 @@ void Server::listenLoop()
         }
         else if (pollResult == (-1))
         {
-            Logger::instance().log("A polling error occurred. Continuing...", Logger::Error);
+            Logger::instance().error("A polling error occurred (socket: " + std::to_string(_listeningSocket) + ")");
         }
         else
         {
@@ -104,11 +104,11 @@ void Server::listenLoop()
                 int clientSocket = accept(_listeningSocket, nullptr, nullptr);
                 if (clientSocket == (-1))
                 {
-                    Logger::instance().log("Failed to accept connection from client", Logger::Error);
+                    Logger::instance().error("Failed to accept connection from client");
                 }
 
                 /* Create and detach a new thread to handle messages from the client */
-                Logger::instance().log("Accepted new connection from client on socket " + std::to_string(clientSocket));
+                Logger::instance().info("Accepted new connection (socket: " + std::to_string(clientSocket) + ")");
                 addClientSession(clientSocket);
             }
         }
@@ -116,4 +116,5 @@ void Server::listenLoop()
 
     /* Cleanup */
     closeSocket(_listeningSocket);
+    Logger::instance().info("Shutting-down listening loop (socket: " + std::to_string(_listeningSocket) + ")");
 }

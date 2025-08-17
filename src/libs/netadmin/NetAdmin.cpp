@@ -9,23 +9,44 @@
 
 #include "NetAdmin.hpp"
 #include "fix/FixTag.hpp"
+#include "logger/Logger.hpp"
 #include "utilities/UUID.hpp"
+#include <iostream>
+
+NetAdmin::NetAdmin()
+{
+    Logger::instance().setLevel(Logger::Warn); /* Only print this or above to the iostream */
+}
 
 
-void NetAdmin::sendAdminCommand(std::string command)
+void NetAdmin::sendAdminCommand(std::string command, std::size_t timeoutSeconds)
 {
     auto sockets = _portSocketMappings.getSockets();
     if (sockets.empty())
     {
-        Logger::instance().error("No active sockets.");
+        std::cerr << "No active sockets" << std::endl;
         return;
     }
 
     auto adminFix = buildAdminCommand(command);
-
     for (auto socket : sockets)
     {
         sendFixMessage(adminFix, socket);
+    }
+
+    /* wait timeoutSeconds or until we get a response */
+    std::unique_lock lock(_responseMutex);
+    _responseCV.wait_for(lock, std::chrono::seconds(timeoutSeconds), [this]
+    { return _hasResponse; });
+}
+
+
+void NetAdmin::onShutdown()
+{
+    std::unique_lock lock(_responseMutex);
+    if (!_hasResponse)
+    {
+        std::cerr << "Timed-out waiting for a response." << std::endl;
     }
 }
 
@@ -48,9 +69,17 @@ void NetAdmin::handleFixMessage(FixMessage message, SocketFD socket)
 
     if (message.getValue(FixTag::MsgType) == "QR") /* Received admin response */
     {
-        Logger::instance().info("Received AdminResponse (sender: " + thePort + "):\n" + message.getValue(FixTag::AdminResponse));
-        return;
+        std::cout << message.getValue(FixTag::AdminResponse) << std::endl;
+    }
+    else
+    {
+        std::cerr << "Received an invalid response." << std::endl;
     }
 
-    Logger::instance().error("Received message with invalid msgType: " + theMsgType + ", from port: " + thePort);
+    {
+        std::unique_lock lock(_responseMutex);
+        _hasResponse = true;
+    } /* Slight limitation is that if we are sending to multiple sockets we return true for first response only */
+
+    _responseCV.notify_all(); /* Notify blocking sendAdminCommand */
 }

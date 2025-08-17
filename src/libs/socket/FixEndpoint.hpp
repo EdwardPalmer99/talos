@@ -33,7 +33,7 @@ protected:
     void sendFixMessage(FixMessage message, ConnectionManager::SocketFD socket)
     {
         enrichFixMessage(message);
-        Logger::instance().debug("Sent FixMsg (destination: " + std::to_string(socket) + "): " + message.toString());
+        Logger::instance().info("Sent FixMsg (destination: " + std::to_string(socket) + "): " + message.toString());
         Transport::sendMessage(message.toString(), socket);
     }
 
@@ -44,7 +44,7 @@ private:
 
     void handleMessage(std::string message, ConnectionManager::SocketFD socket) final
     {
-        Logger::instance().debug("Received FixMsg (source: " + std::to_string(socket) + "): " + message);
+        Logger::instance().info("Received FixMsg (source: " + std::to_string(socket) + "): " + message);
         handleFixMessage(FixMessage(std::move(message)), socket);
     }
 };

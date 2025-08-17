@@ -55,9 +55,49 @@ void OMEngine::handleFixMessage(FixMessage fixMsg, SocketFD senderSocket)
         return handleClientFixMessage(std::move(fixMsg), senderSocket);
     else if (msgType == "8")
         return handleExchangeFixMessage(std::move(fixMsg), senderSocket);
+    else if (msgType == "QR")
+        return handleNetAdmin(std::move(fixMsg), senderSocket);
 
     Logger::instance().log("Invalid message type [" + msgType + "]", Logger::Error);
     /* TODO: - handle; send alert to OMAlert to notify humans */
+}
+
+
+void OMEngine::handleNetAdmin(FixMessage fixMsg, SocketFD senderSocket)
+{
+    std::string adminCmd = fixMsg.getValue(FixTag::AdminCommand);
+    if (adminCmd.empty())
+    {
+        Logger::instance().error("Missing admin command on FixMsg => ignoring.");
+        return; /* TODO: - return a list of supported commands */
+    }
+
+    /* Match against supported commands, i.e. cancel_tr, correct_tr, messagesProcessed, ... */
+    // TODO - convert into an enum
+
+    if (adminCmd == "list.sockets")
+    {
+        std::ostringstream os;
+
+        /* Delegate to method */
+        auto activeSockets = _portSocketMappings.getSockets();
+
+        os << "# active sockets: " << activeSockets.size() << std::endl;
+
+        for (auto socket : activeSockets)
+        {
+            os << "- socket " << socket << std::endl;
+        }
+
+        /* Construct response */
+        FixMessage msg;
+        msg.setTag(FixTag::MsgType, "QR");
+        msg.setTag(FixTag::AdminResponse, os.str());
+
+        sendFixMessage(msg, senderSocket);
+    }
+
+    Logger::instance().error("Failed to handle AdminCmd: " + adminCmd);
 }
 
 

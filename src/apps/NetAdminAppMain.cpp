@@ -14,7 +14,7 @@
 
 int main(int argc, char *argv[])
 {
-    if (argc != 3)
+    if (argc != 3 && argc != 4)
     {
         std::cout << "Usage: " << argv[0] << " [PORT] [CMD]" << std::endl;
         std::cout << "Send admin commands to the specified application." << std::endl;
@@ -33,9 +33,6 @@ int main(int argc, char *argv[])
     adminClient.connectToServer(static_cast<Client::Port>(thePort));
 
     adminClient.sendAdminCommand(std::string(argv[2]));
-
-    const long kTimeoutDuration = 5;
-    std::this_thread::sleep_for(std::chrono::seconds(kTimeoutDuration));
 
     adminClient.stop();
     adminClient.wait();
