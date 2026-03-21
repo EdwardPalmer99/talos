@@ -1,4 +1,4 @@
 Talos
 ===========
 
-A demo implementation of an Order Management System in C++.
+An Order Management System written in C++.
